@@ -1,0 +1,18 @@
+{
+  "name": "zeta-wiki",
+  "version": "2.0.0",
+  "description": "ZETA Wiki — Современная, безопасная и быстрая веб-энциклопедия нового поколения",
+  "scripts": {
+    "start": "npx -y serve src -p 3000",
+    "dev": "npx -y serve src -p 3000"
+  },
+  "keywords": [
+    "wikipedia",
+    "encyclopedia",
+    "modern-ui",
+    "vanilla-js",
+    "dark-theme"
+  ],
+  "author": "VIGER Dev",
+  "license": "MIT"
+}
