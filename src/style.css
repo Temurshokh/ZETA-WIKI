@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ZETA WIKI - DESIGN SYSTEM & STYLESHEET
+   ZETA WIKI - DESIGN SYSTEM & STYLESHEET (v2.1)
    Themes: Dark (Default), Light, OLED
    ========================================================================== */
 
@@ -33,7 +33,14 @@
     --border-focus: rgba(59, 130, 246, 0.6);
 
     --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: 'Merriweather', Georgia, serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* Dynamic Reader Mode Variables */
+    --article-font-size: 1.12rem;
+    --article-font-family: var(--font-main);
+    --article-max-width: 820px;
+    --article-line-height: 1.8;
 
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -124,6 +131,31 @@ body {
     transition: width 0.1s linear;
 }
 
+/* Offline Banner */
+.offline-banner {
+    position: fixed;
+    top: 3px;
+    left: 0;
+    right: 0;
+    background: #D97706;
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 999;
+    box-shadow: var(--shadow-sm);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
 /* App Layout */
 .app-container {
     display: flex;
@@ -151,7 +183,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px 24px;
+    padding: 0 24px 20px;
 }
 
 .logo {
@@ -213,7 +245,7 @@ body {
     text-transform: uppercase;
     color: var(--text-muted);
     letter-spacing: 1.2px;
-    padding: 16px 14px 6px;
+    padding: 14px 14px 6px;
     font-weight: 700;
 }
 
@@ -242,7 +274,7 @@ body {
 }
 
 .nav-link:hover svg {
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .nav-link.active {
@@ -375,7 +407,7 @@ body {
 .topbar-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
@@ -404,6 +436,11 @@ body {
     transform: translateY(0);
 }
 
+.icon-btn-sm {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+}
+
 .menu-btn {
     display: none;
 }
@@ -415,7 +452,7 @@ body {
     align-items: center;
     gap: 10px;
     background: var(--bg-panel);
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border-color);
     flex-grow: 1;
@@ -452,6 +489,19 @@ body {
 
 .search-input::placeholder {
     color: var(--text-muted);
+}
+
+.search-kbd {
+    background: var(--bg-panel-solid);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 3px 6px;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
 .search-clear-btn {
@@ -598,6 +648,120 @@ body {
 }
 
 /* ==========================================================================
+   READER CUSTOMIZATION MODAL
+   ========================================================================== */
+.reader-settings-panel {
+    position: fixed;
+    top: 76px;
+    right: 32px;
+    width: 320px;
+    background: var(--bg-panel-solid);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    z-index: 250;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+.reader-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.reader-settings-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.reader-setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+}
+
+.font-size-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+}
+
+.btn-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: var(--transition-fast);
+}
+
+.btn-pill:hover {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+.font-size-val {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.font-family-selector, .width-choice-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.font-family-selector {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.font-choice-btn, .width-choice-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition-fast);
+}
+
+.font-choice-btn:hover, .width-choice-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-panel-hover);
+}
+
+.font-choice-btn.active, .width-choice-btn.active {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+/* ==========================================================================
    COMPONENTS: CARDS, GRID, GLASS PANEL
    ========================================================================== */
 .glass-panel {
@@ -723,7 +887,7 @@ body {
 }
 
 /* ==========================================================================
-   ARTICLE READER VIEW & TABLE OF CONTENTS (TOC)
+   ARTICLE READER VIEW, TTS & TABLE OF CONTENTS (TOC)
    ========================================================================== */
 .article-view-layout {
     display: grid;
@@ -737,10 +901,14 @@ body {
 
 .article-main-column {
     min-width: 0;
+    max-width: var(--article-max-width);
+    margin: 0 auto;
+    width: 100%;
+    transition: max-width var(--transition);
 }
 
 .article-header {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .article-title {
@@ -755,8 +923,8 @@ body {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 24px;
+    gap: 10px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -797,6 +965,138 @@ body {
     margin-left: auto;
 }
 
+/* TTS Audio Player Widget */
+.article-tts-player {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 12px 18px;
+    margin: 20px 0 28px;
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.3s ease;
+}
+
+.tts-btn {
+    background: var(--accent-primary);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-fast);
+}
+
+.tts-btn:hover {
+    background: var(--accent-primary-hover);
+    transform: translateY(-1px);
+}
+
+.tts-btn-stop {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: var(--transition-fast);
+}
+
+.tts-btn-stop:hover {
+    color: var(--accent-rose);
+    border-color: var(--accent-rose);
+}
+
+.tts-status-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+.tts-audio-waves {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 18px;
+}
+
+.audio-bar {
+    width: 3px;
+    height: 6px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+}
+
+.tts-playing .audio-bar:nth-child(1) { animation: wave 0.8s ease-in-out infinite; }
+.tts-playing .audio-bar:nth-child(2) { animation: wave 0.8s ease-in-out 0.2s infinite; }
+.tts-playing .audio-bar:nth-child(3) { animation: wave 0.8s ease-in-out 0.4s infinite; }
+.tts-playing .audio-bar:nth-child(4) { animation: wave 0.8s ease-in-out 0.1s infinite; }
+
+@keyframes wave {
+    0%, 100% { height: 6px; }
+    50% { height: 18px; }
+}
+
+/* Mobile Collapsible TOC */
+.mobile-toc-accordion {
+    display: none;
+    margin: 20px 0 28px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.mobile-toc-summary {
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-primary);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobile-toc-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mobile-toc-content {
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--border-color);
+}
+
+.mobile-toc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 12px;
+}
+
+.mobile-toc-list a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: block;
+    padding: 4px 0;
+}
+
+.mobile-toc-list a:hover {
+    color: var(--accent-primary);
+}
+
 .article-image-banner {
     width: 100%;
     max-height: 480px;
@@ -808,19 +1108,21 @@ body {
 }
 
 .article-content {
-    font-size: 1.12rem;
-    line-height: 1.8;
+    font-family: var(--article-font-family);
+    font-size: var(--article-font-size);
+    line-height: var(--article-line-height);
     color: var(--text-primary);
     word-break: break-word;
+    transition: font-size var(--transition-fast), font-family var(--transition-fast);
 }
 
 .article-content p {
     margin-bottom: 24px;
-    font-weight: 350;
     color: var(--text-primary);
 }
 
 .article-content h2 {
+    font-family: var(--font-main);
     font-size: 1.8rem;
     font-weight: 700;
     margin: 48px 0 20px;
@@ -831,6 +1133,7 @@ body {
 }
 
 .article-content h3 {
+    font-family: var(--font-main);
     font-size: 1.35rem;
     font-weight: 600;
     margin: 32px 0 16px;
@@ -869,7 +1172,74 @@ body {
     border-color: var(--accent-primary-hover);
 }
 
-/* Interactive Table of Contents (TOC) */
+/* Enhanced Code Blocks with Copy Button */
+.code-block-wrapper {
+    position: relative;
+    margin: 24px 0;
+    background: #0D1117;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.code-copy-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.code-copy-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-color-hover);
+}
+
+.article-content pre {
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #E6EDF3;
+}
+
+.article-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.article-content th, .article-content td {
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.article-content th {
+    background: var(--bg-panel);
+    font-weight: 700;
+}
+
+/* Interactive Table of Contents (TOC) Desktop */
 .article-toc-column {
     position: sticky;
     top: 24px;
@@ -924,6 +1294,39 @@ body {
 .toc-item.depth-3 {
     margin-left: 14px;
     font-size: 0.82rem;
+}
+
+/* ==========================================================================
+   FLOATING BACK TO TOP BUTTON
+   ========================================================================== */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-panel-solid);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 900;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color var(--transition-fast), opacity 0.2s;
+    animation: fadeIn 0.2s ease;
+}
+
+.back-to-top-btn:hover {
+    background: var(--accent-primary);
+    color: #fff;
+    transform: translateY(-4px) scale(1.05);
+}
+
+.back-to-top-btn:active {
+    transform: translateY(0);
 }
 
 /* ==========================================================================
@@ -1159,7 +1562,15 @@ body {
     }
     
     .article-toc-column {
-        display: none; /* Hide sticky TOC on medium screens or tuck into collapsible */
+        display: none; /* Hide sticky TOC on medium screens */
+    }
+
+    .mobile-toc-accordion {
+        display: block; /* Show mobile collapsible TOC */
+    }
+
+    .search-kbd {
+        display: none;
     }
 }
 
@@ -1211,11 +1622,22 @@ body {
         padding: 6px 12px;
     }
 
+    .reader-settings-panel {
+        right: 16px;
+        left: 16px;
+        width: auto;
+    }
+
     .dev-hero {
         padding: 32px 20px;
     }
 
     .dev-hero-title {
         font-size: 2.2rem;
+    }
+
+    .back-to-top-btn {
+        bottom: 20px;
+        right: 20px;
     }
 }
