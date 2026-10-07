@@ -525,7 +525,7 @@
         stopTTS();
         const cleanText = textToRead.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 4000);
         STATE.tts.utterance = new SpeechSynthesisUtterance(cleanText);
-        
+
         // Voice matching active language
         const langMap = { ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
         STATE.tts.utterance.lang = langMap[STATE.lang] || 'ru-RU';
@@ -922,9 +922,9 @@
                         <div class="article-toolbar">
                             <button id="btn-bookmark-action" class="article-tool-btn ${bookmarked ? 'active' : ''}">
                                 ${bookmarked
-                                    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg> Сохранено`
-                                    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg> В закладки`
-                                }
+                ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg> Сохранено`
+                : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg> В закладки`
+            }
                             </button>
 
                             <button id="btn-share-action" class="article-tool-btn">
@@ -1124,45 +1124,246 @@
         stopTTS();
         DOM.appContent.innerHTML = `
             <div class="dev-portal-view">
+                <!-- Hero Header -->
                 <div class="dev-hero">
                     <div class="dev-avatar-lg">V</div>
-                    <h1 class="dev-hero-title">VIGER Developer Portal</h1>
-                    <p class="dev-hero-subtitle">Темуршох Ахмадалиев &bull; Software Engineer & Creator</p>
+                    <h1 class="dev-hero-title">VIGER Dev</h1>
+                    <p class="dev-hero-subtitle">Темуршох Ахмадалиев &bull; Разработчик, создатель контента и исследователь технологий</p>
                     
                     <div class="dev-badges-row">
-                        <span class="dev-pill">⚡ Architecture & Fullstack</span>
-                        <span class="dev-pill">🤖 AI Automation</span>
-                        <span class="dev-pill">🚀 Open Source</span>
-                        <span class="dev-pill">🎧 Built-in TTS Narrator</span>
+                        <span class="dev-pill">🎮 Gamer since 2 y.o.</span>
+                        <span class="dev-pill">🎬 Монтаж & YouTube</span>
+                        <span class="dev-pill">🛠️ 23 переустановки ОС</span>
+                        <span class="dev-pill">🤖 AI & Codex</span>
+                        <span class="dev-pill">🚀 Автор ZETA Wiki</span>
+                    </div>
+
+                    <div class="dev-quote-lead">
+                        «Мой интерес к IT начался задолго до того, как я вообще понял, что такое программирование. Сначала это были игры, потом компьютер, интернет, Minecraft, YouTube, монтаж и только потом — программирование и создание собственных проектов. И во многом всё началось благодаря моему старшему брату.»
                     </div>
                 </div>
 
-                <div class="dev-terminal">
-                    <div class="dev-terminal-header">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
-                        <span class="terminal-title">viger@zeta-core:~</span>
+                <!-- Timeline: С чего всё началось -->
+                <div class="dev-timeline-wrapper">
+                    <h2 class="dev-section-heading">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Хроника пути VIGER Dev
+                    </h2>
+
+                    <div class="dev-timeline">
+                        <!-- Step 1 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Первый компьютер и «Узбекская GTA»</h3>
+                                <span class="timeline-badge">2–4 года</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Когда мне было около <strong>2 лет</strong>, родители купили моему старшему брату ноутбук. Для того времени это был довольно мощный компьютер, и именно он стал моим первым настоящим знакомством с цифровым миром.</p>
+                                <p>Примерно в <strong>4 года</strong> брат однажды пришёл из школы с диском, на котором были <strong>GTA III, GTA Vice City и GTA San Andreas</strong>. Сначала я просто смотрел, как он играет, а потом начал запускать игры сам, когда его не было дома.</p>
+                                <div class="timeline-highlight-box">
+                                    🚗 <strong>Забавная история:</strong> В GTA III я почему-то решил, что это практически «узбекская GTA». В игре было много машин, похожих на те, что ездили по нашим улицам: <em>Daewoo Nexia, Lacetti, Tico, Spark</em> и даже что-то вроде <em>Damas</em>. Брат сначала смеялся, а потом сам стал называть её «узбекской GTA».
+                                </div>
+                                <p>К 5 годам я обожал <strong>GTA Vice City</strong>. Читать по-английски я ещё почти не умел, но брат оставлял мне на листочках шпаргалки с чит-кодами, ориентируя по расположению клавиш. Он даже перебиндил чит на танк на одну кнопку — нажал клавишу, и с неба падает танк!</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Самостоятельное освоение и Dendy</h3>
+                                <span class="timeline-badge">6 лет</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>К шести годам я уже свободно ориентировался на клавиатуре и учился разбирать английские буквы. Отец купил диск с играми: <strong>Plants vs. Zombies, Trials Evolution</strong> и бильярдом. За ними я проводил часы.</p>
+                                <p>На компьютере стояла <strong>Windows 7</strong>, и постепенно меня начала завораживать сама операционная система: дизайн интерфейса, проводник, настройки, программы, установка софта. Параллельно я рубился в <strong>Dendy</strong>: <em>Battle City (Танчики), Donkey Kong</em> и старые 8-битные платформеры стали важной частью моего детства.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">kakoyto год: Интернет, переезд и открытие Minecraft</h3>
+                                <span class="timeline-badge">7 лет</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Мы переехали в город, и дома появился настоящий <strong>Wi-Fi</strong>. Поначалу я не понимал, как работает интернет, но мгновенно освоился. Перекидывал файлы с телефона брата на ПК.</p>
+                                <p>Именно тогда брат показал мне мобильный клон Minecraft, который мне совсем не зашел. Но затем он установил <strong>настоящий оригинальный Minecraft</strong> — и мир перевернулся. Я загорелся желанием играть в него на ПК.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Эпоха Alan Becker и первый YouTube-канал</h3>
+                                <span class="timeline-badge">Творческий старт</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Установив Minecraft на ПК, я стал залипать на YouTube. Увидев легендарные анимации <strong>Alan Becker</strong> по Minecraft, в голове щёлкнуло: <em>«Я тоже хочу такое делать!»</em></p>
+                                <p>Я нашел софт для анимации, стал экспериментировать и открыл свой YouTube-канал (на первых порах с монтажом помогал брат).</p>
+                                <div class="timeline-highlight-box">
+                                    ⚡ <strong>Monomarkaz и шейдеры:</strong> Брат устроился работать в Monomarkaz, где стояли мощные моноблоки на Ryzen 5. Он поднял свой сервер, и мы играли вместе. Когда он показал мне Minecraft с шейдерами, я впервые осознал мощь компьютерной графики. Появилось твёрдое желание: <strong>не просто играть, а создавать контент вокруг этого</strong>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">От анимаций — к монтажу в 20 FPS</h3>
+                                <span class="timeline-badge">Закалка навыка</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Я переключился на создание роликов по Minecraft. Мой старенький компьютер с трудом выдавал <strong>20 FPS</strong>, поэтому о лёгком процессе речи не шло. Но именно эта техническая сложность заставила меня досконально изучить <strong>видеомонтаж</strong>.</p>
+                                <p>Монтировал на всём, что находил под рукой. Учился чувствовать динамику и темп, резать склейки, накладывать эффекты, придумывать интересную подачу и самостоятельно доводить идею до готового ролика. Монтаж стал моим вторым дыханием.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 6 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Программирование через старшего брата</h3>
+                                <span class="timeline-badge">Первый код</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Мой старший брат сам увлёкся кодингом, изучая материалы на YouTube. Он стал делиться знаниями со мной, объяснять логику и алгоритмы. Так я написал свои первые строчки кода.</p>
+                                <p>Я совмещал сразу четыре увлечения: <strong>игры, монтаж, YouTube и программирование</strong>. Даже когда позже фокус смещался, желание создавать собственные цифровые продукты уже никуда не исчезало.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 7 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Эксперимент с ОС: 23 переустановки</h3>
+                                <span class="timeline-badge">Конец 2023 года</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>Я увлёкся операционными системами настолько, что за один сезон переустановил систему около <strong>23 раз</strong>! На флешку по очереди записывались:</p>
+                                <div class="timeline-highlight-box">
+                                    💾 <em>Windows 7 32-bit &rarr; Windows 7 64-bit &rarr; кастомные сборки &rarr; Windows 10 &rarr; Windows 11 Pro &rarr; Ubuntu Linux</em>
+                                </div>
+                                <p>Был даже безумный эксперимент с модифицированной Windows 7, перерисованной под <strong>macOS</strong> (выглядело стильно, но дико тормозило). Этот период научил меня главному инженерному рефлексу: <strong>не бояться экспериментировать, ломать, переустанавливать и докапываться до сути того, как всё устроено</strong>.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 8 -->
+                        <div class="timeline-card">
+                            <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+                            <div class="timeline-header">
+                                <h3 class="timeline-title">Искусственный интеллект и свои проекты</h3>
+                                <span class="timeline-badge">2024–2026</span>
+                            </div>
+                            <div class="timeline-body">
+                                <p>С приходом генеративного ИИ я погрузился в изучение нейросетей. Пытался обучить собственную AI-модель (железа не хватало, обучение шло медленно, но проект остался сохранён на <strong>GitHub</strong> и дал колоссальный опыт архитектуры).</p>
+                                <p>Сегодня я активно использую современные AI-инструменты разработки (включая Codex). Для меня ИИ — это не замена мышления программиста, а <strong>мощнейший мультипликатор</strong>, позволяющий одному человеку реализовывать масштабные идеи со скоростью целой команды.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div><span class="terminal-green">$</span> zeta-wiki --full-audit-report</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Zero XSS (Strict Browser DOMParser Sanitizer)</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Race Conditions Eliminated (AbortController)</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Multi-Language Wikipedia Integration (RU, EN, UZ, DE, ES, FR)</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Cross-Language Article Redirection (prop=langlinks)</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Web Speech Audio Narrator Active</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Reader Mode (Sans, Serif Book, Mono + Sizing)</div>
-                    <div class="terminal-text"><span class="terminal-green">[OK]</span> Progressive Web App (PWA + Service Worker) Enabled</div>
-                    <br>
-                    <div><span class="terminal-green">$</span> echo "Built with speed, precision and security."</div>
-                    <div class="terminal-yellow">"Built with speed, precision and security."</div>
                 </div>
 
-                <div style="text-align: center;">
+                <!-- Три эволюционных вопроса -->
+                <div style="margin: 48px 0 24px;">
+                    <h2 class="dev-section-heading">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        Почему именно IT? Эволюция трёх вопросов
+                    </h2>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px;">
+                        Компьютер для меня никогда не был просто игрушкой. Мое отношение к нему развивалось через три фундаментальных вопроса:
+                    </p>
+
+                    <div class="dev-questions-grid">
+                        <div class="question-card">
+                            <span class="question-number">01</span>
+                            <h3 class="question-title">«Как это работает?»</h3>
+                            <p class="question-desc">Детский интерес: как устроена игра, откуда берутся машины в GTA, как запускается Windows 7 и что прячется внутри настроек.</p>
+                        </div>
+                        <div class="question-card">
+                            <span class="question-number">02</span>
+                            <h3 class="question-title">«А могу ли я сделать это сам?»</h3>
+                            <p class="question-desc">Творческий этап: создать анимацию как у Alan Becker, смонтировать ролик в 20 FPS, написать первый код и переустановить 23 системы.</p>
+                        </div>
+                        <div class="question-card">
+                            <span class="question-number">03</span>
+                            <h3 class="question-title">«Что будет, если создать это по-своему?»</h3>
+                            <p class="question-desc">Зрелый подход инженера: разработка собственных архитектур, синтез ИИ и веб-технологий, создание продуктов вроде ZETA Wiki.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dedication to Older Brother -->
+                <div class="dev-brother-card">
+                    <div class="brother-card-header">
+                        <div class="brother-icon-circle">⭐</div>
+                        <h3 class="brother-card-title">Главный человек, с которого всё началось</h3>
+                    </div>
+                    <div class="brother-card-text">
+                        Главный человек, который повлиял на мой интерес к IT — <strong>мой старший брат</strong>.
+                        Он первым показал мне игры, ноутбук, Minecraft, основы программирования и привил ключевой принцип исследователя:
+                    </div>
+                    <div class="brother-card-quote">
+                        «Не только пользоваться технологией, но и разбираться, как она устроена изнутри.»
+                    </div>
+                </div>
+
+                <!-- VIGER Dev Сегодня -->
+                <div style="margin: 48px 0;">
+                    <h2 class="dev-section-heading">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        VIGER Dev сегодня
+                    </h2>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+                        Сейчас я развиваюсь сразу в нескольких ключевых сферах: <strong>монтаж, YouTube, разработка, дизайн, эксперименты с технологиями и AI</strong>.
+                        За день у меня может появиться до 10 небольших идей и экспериментальных прототипов, из которых я отбираю самые перспективные и развиваю дальше.
+                    </p>
+
+                    <div class="dev-today-grid">
+                        <div class="today-stat-card">
+                            <div class="today-stat-icon">🎬</div>
+                            <div class="today-stat-label">Монтаж & YouTube</div>
+                            <div class="today-stat-sub">Чувство ритма, динамика, эффекты</div>
+                        </div>
+                        <div class="today-stat-card">
+                            <div class="today-stat-icon">🌐</div>
+                            <div class="today-stat-label">Web & ZETA Wiki</div>
+                            <div class="today-stat-sub">Создание быстрых и чистых интерфейсов</div>
+                        </div>
+                        <div class="today-stat-card">
+                            <div class="today-stat-icon">🤖</div>
+                            <div class="today-stat-label">AI-Driven Coding</div>
+                            <div class="today-stat-sub">Быстрая трансформация мыслей в код</div>
+                        </div>
+                        <div class="today-stat-card">
+                            <div class="today-stat-icon">🚀</div>
+                            <div class="today-stat-label">Свои технологии</div>
+                            <div class="today-stat-sub">«Не просто пользоваться, а создавать»</div>
+                        </div>
+                    </div>
+
+                    <div class="dev-quote-lead" style="text-align: center; border-left: none; border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); font-size: 1.15rem; font-weight: 600;">
+                        «Я буквально рос вместе с компьютером. Это и есть история VIGER Dev.»
+                    </div>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
                     <a href="#home" class="btn-primary">Вернуться к энциклопедии</a>
+                    <a href="#random" class="article-tool-btn">🎲 Случайная статья</a>
                 </div>
             </div>
         `;
-        document.title = 'Developer Portal — ZETA Wiki';
+        document.title = 'VIGER Dev — История разработчика | ZETA Wiki';
     }
 
     // =========================================================================
