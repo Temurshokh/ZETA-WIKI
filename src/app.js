@@ -1,27 +1,35 @@
 /**
  * ZETA WIKI - Modern, Secure, High-Performance Encyclopedia (v2.1)
  * Features:
- * - Dynamic I18n with localized categories and home feeds
- * - Native Article Language Links (Cross-language switching)
- * - Web Speech API Text-to-Speech (TTS) article narration
- * - Reader Mode (Font size, Serif/Sans/Mono, Column width)
- * - Browsing History tracking with offline persistence
- * - Mobile Table of Contents (TOC) collapsible accordion
- * - Power User Keyboard Shortcuts (Ctrl+K, Esc, Alt+R, Alt+T, Alt+H)
- * - Floating Back-to-Top button
- * - Automated Code block copy buttons
- * - PWA Service Worker & Offline detection banner
- * - Strict DOMParser HTML Sanitization & AbortController race-condition prevention
+ * - Dynamic I18n with full UI localization (Navigation, Categories, Modals, Banners)
+ * - Native Article Language Links (Cross-language switching with redirect handling)
+ * - Web Speech API Text-to-Speech (TTS) article narration with auto-voice matching
+ * - Reader Mode (Font size, Serif/Sans/Mono, True Wide Column width 1050px)
+ * - Browsing History & Offline Bookmarks with Full-Article Content Persistence
+ * - Responsive Table of Contents (Desktop Sticky + Mobile Collapsible Accordion)
+ * - In-Article Citation & Anchor Interception (No 404 on #cite_note jumps)
+ * - Safe HTML Sanitizer (RFC-compliant protocol whitelisting & URIError protection)
+ * - Asynchronous Generation Token (Race-condition free SPA Routing)
+ * - PWA Service Worker & Real-time Network/Offline Status Detection
  */
 
 (function () {
     'use strict';
 
     // =========================================================================
-    // I18N DICTIONARY & CATEGORY MAPPING
+    // I18N DICTIONARY & FULL UI LOCALIZATION
     // =========================================================================
     const I18N = {
         ru: {
+            navSections: 'Разделы',
+            navHome: 'Главная',
+            navSaved: 'Закладки',
+            navHistory: 'История',
+            navRandom: 'Случайная',
+            navCategories: 'Категории',
+            suggestionsHeader: 'Подсказки',
+            offlineBanner: 'Вы находитесь в оффлайн-режиме. Доступны сохранённые статьи и закладки.',
+            offlineBadge: 'Оффлайн-копия',
             homeQuery: 'Научные открытия и технологии',
             homeTitle: 'Главные темы',
             homeDesc: 'Свободная современная энциклопедия. Выберите категорию или воспользуйтесь быстрым поиском.',
@@ -31,12 +39,32 @@
             searchPlaceholder: 'Поиск в Википедии (Ctrl+K)...',
             savedTitle: 'Закладки',
             savedDesc: 'Сохраненные статьи для быстрого чтения оффлайн или позже.',
+            savedEmptyTitle: 'Закладок пока нет',
+            savedEmptyDesc: 'Нажмите кнопку «В закладки» во время чтения любой статьи, чтобы сохранить её с текстом для оффлайн-доступа.',
+            clearSaved: 'Очистить закладки',
+            clearSavedConfirm: 'Очистить все сохранённые закладки?',
+            savedToast: 'Статья сохранена в закладки (доступна оффлайн)',
+            removedToast: 'Статья удалена из закладок',
             historyTitle: 'История просмотров',
             historyDesc: 'Недавно прочитанные статьи в этом браузере.',
+            historyEmptyTitle: 'История пуста',
+            historyEmptyDesc: 'Прочитанные статьи будут автоматически сохраняться в этом списке.',
+            clearHistory: 'Очистить историю',
+            clearHistoryConfirm: 'Очистить всю историю просмотров?',
+            readAgain: 'Прочитать снова &rarr;',
+            readArticle: 'Читать статью &rarr;',
             ttsPlay: 'Слушать статью',
             ttsPause: 'Пауза',
+            ttsResume: 'Возобновить',
             ttsStop: 'Стоп',
             ttsSpeaking: 'Озвучивание статьи...',
+            ttsPaused: 'Озвучивание приостановлено',
+            ttsDefault: 'Аудиоверсия статьи (Text-to-Speech)',
+            articleNotFoundTitle: 'Статья не найдена',
+            articleNotFoundDesc: 'К сожалению, такой страницы в выбранном языковом разделе Википедии нет.',
+            netErrorTitle: 'Ошибка сети',
+            netErrorDesc: 'Не удалось загрузить данные из Wikipedia API. Проверьте интернет-соединение.',
+            retryBtn: 'Повторить попытку',
             categories: {
                 people: { query: 'Знаменитости и биографии', label: 'Люди и биографии' },
                 countries: { query: 'Страны и география', label: 'Страны и география' },
@@ -47,21 +75,50 @@
             }
         },
         en: {
+            navSections: 'Sections',
+            navHome: 'Home',
+            navSaved: 'Bookmarks',
+            navHistory: 'History',
+            navRandom: 'Random',
+            navCategories: 'Categories',
+            suggestionsHeader: 'Suggestions',
+            offlineBanner: 'You are currently offline. Saved bookmarks and cached articles are available.',
+            offlineBadge: 'Offline Copy',
             homeQuery: 'Scientific discoveries and technology',
             homeTitle: 'Featured Topics',
-            homeDesc: 'Modern free encyclopedia. Choose a category or use the quick search.',
+            homeDesc: 'Free modern encyclopedia. Choose a category or use the instant search.',
             searchTitle: 'Search Results',
             searchDesc: 'Results for: "{query}"',
             searchEmpty: 'No articles found for your query.',
             searchPlaceholder: 'Search Wikipedia (Ctrl+K)...',
             savedTitle: 'Bookmarks',
-            savedDesc: 'Saved articles for quick reading offline or later.',
+            savedDesc: 'Saved articles for fast reading offline or later.',
+            savedEmptyTitle: 'No bookmarks yet',
+            savedEmptyDesc: 'Click "Bookmark" while reading any article to save it with text for offline reading.',
+            clearSaved: 'Clear bookmarks',
+            clearSavedConfirm: 'Remove all saved bookmarks?',
+            savedToast: 'Article bookmarked (available offline)',
+            removedToast: 'Article removed from bookmarks',
             historyTitle: 'Reading History',
             historyDesc: 'Recently viewed articles in this browser.',
+            historyEmptyTitle: 'History is empty',
+            historyEmptyDesc: 'Articles you read will automatically appear here.',
+            clearHistory: 'Clear history',
+            clearHistoryConfirm: 'Clear all reading history?',
+            readAgain: 'Read again &rarr;',
+            readArticle: 'Read article &rarr;',
             ttsPlay: 'Listen to article',
             ttsPause: 'Pause',
+            ttsResume: 'Resume',
             ttsStop: 'Stop',
             ttsSpeaking: 'Narrating article...',
+            ttsPaused: 'Narration paused',
+            ttsDefault: 'Audio version (Text-to-Speech)',
+            articleNotFoundTitle: 'Article not found',
+            articleNotFoundDesc: 'Unfortunately, this article does not exist in the selected language section.',
+            netErrorTitle: 'Network Error',
+            netErrorDesc: 'Failed to fetch data from Wikipedia API. Check your connection.',
+            retryBtn: 'Retry',
             categories: {
                 people: { query: 'Celebrities and biographies', label: 'People & Biographies' },
                 countries: { query: 'Countries and geography', label: 'Countries & Geography' },
@@ -72,21 +129,50 @@
             }
         },
         uz: {
+            navSections: 'Boʻlimlar',
+            navHome: 'Bosh sahifa',
+            navSaved: 'Xatchoʻplar',
+            navHistory: 'Tarix',
+            navRandom: 'Tasodifiy',
+            navCategories: 'Kategoriyalar',
+            suggestionsHeader: 'Tavsiyalar',
+            offlineBanner: 'Siz oflayn rejimdasiz. Saqlangan xatchoʻplar va maqolalar mavjud.',
+            offlineBadge: 'Oflayn nusxa',
             homeQuery: 'Ilmiy kashfiyotlar va texnologiyalar',
             homeTitle: 'Asosiy mavzular',
-            homeDesc: 'Zamonaviy erkin ensiklopediya. Kategoriya tanlang yoki qidiruvdan foydalaning.',
+            homeDesc: 'Zamonaviy erkin ensiklopediya. Kategoriya tanlang yoki tezkor qidiruvdan foydalaning.',
             searchTitle: 'Qidiruv natijalari',
             searchDesc: '«{query}» soʻrovi boʻyicha natijalar',
             searchEmpty: 'Soʻrovingiz boʻyicha hech narsa topilmadi.',
             searchPlaceholder: 'Vikipediyadan qidirish (Ctrl+K)...',
             savedTitle: 'Xatchoʻplar',
-            savedDesc: 'Keyinroq oʻqish uchun saqlangan maqolalar.',
+            savedDesc: 'Keyinroq oflayn oʻqish uchun saqlangan maqolalar.',
+            savedEmptyTitle: 'Xatchoʻplar hali yoʻq',
+            savedEmptyDesc: 'Maqolani oflayn oʻqish uchun «Xatchoʻpga» tugmasini bosing.',
+            clearSaved: 'Xatchoʻplarni tozalash',
+            clearSavedConfirm: 'Barcha xatchoʻplar oʻchirilsinmi?',
+            savedToast: 'Maqola xatchoʻplarga saqlandi (oflayn mavjud)',
+            removedToast: 'Maqola xatchoʻplardan oʻchirildi',
             historyTitle: 'Koʻrishlar tarixi',
-            historyDesc: 'Yaqinda oʻqilgan maqolalar.',
+            historyDesc: 'Ushbu brauzerda yaqinda oʻqilgan maqolalar.',
+            historyEmptyTitle: 'Tarix boʻsh',
+            historyEmptyDesc: 'Oʻqilgan maqolalar avtomatik ravishda bu yerda saqlanadi.',
+            clearHistory: 'Tarixni tozalash',
+            clearHistoryConfirm: 'Barcha koʻrishlar tarixi tozalansinmi?',
+            readAgain: 'Qayta oʻqish &rarr;',
+            readArticle: 'Maqolani ochish &rarr;',
             ttsPlay: 'Maqolani tinglash',
             ttsPause: 'Pauza',
+            ttsResume: 'Davom ettirish',
             ttsStop: 'Toʻxtatish',
             ttsSpeaking: 'Maqola oʻqilmoqda...',
+            ttsPaused: 'Oʻqish toʻxtatib turildi',
+            ttsDefault: 'Ovozli versiya (Text-to-Speech)',
+            articleNotFoundTitle: 'Maqola topilmadi',
+            articleNotFoundDesc: 'Afsuski, tanlangan tildagi boʻlimda bunday maqola mavjud emas.',
+            netErrorTitle: 'Tarmoq xatosi',
+            netErrorDesc: 'Vikipediya API bilan aloqa oʻrnatib boʻlmadi. Internetni tekshiring.',
+            retryBtn: 'Qayta urinish',
             categories: {
                 people: { query: 'Mashhur shaxslar biografiyasi', label: 'Mashhur shaxslar' },
                 countries: { query: 'Dunyo davlatlari geografiyasi', label: 'Davlatlar va geografiya' },
@@ -97,6 +183,15 @@
             }
         },
         de: {
+            navSections: 'Abschnitte',
+            navHome: 'Startseite',
+            navSaved: 'Lesezeichen',
+            navHistory: 'Verlauf',
+            navRandom: 'Zufall',
+            navCategories: 'Kategorien',
+            suggestionsHeader: 'Vorschläge',
+            offlineBanner: 'Sie sind offline. Gespeicherte Lesezeichen sind verfügbar.',
+            offlineBadge: 'Offline-Kopie',
             homeQuery: 'Wissenschaftliche Entdeckungen und Technologie',
             homeTitle: 'Hauptthemen',
             homeDesc: 'Moderne freie Enzyklopädie. Wählen Sie eine Kategorie oder suchen Sie gezielt.',
@@ -105,13 +200,33 @@
             searchEmpty: 'Keine Artikel zu Ihrer Suchanfrage gefunden.',
             searchPlaceholder: 'Wikipedia durchsuchen (Ctrl+K)...',
             savedTitle: 'Lesezeichen',
-            savedDesc: 'Gespeicherte Artikel für späteres Lesen.',
+            savedDesc: 'Gespeicherte Artikel für späteres Offline-Lesen.',
+            savedEmptyTitle: 'Noch keine Lesezeichen',
+            savedEmptyDesc: 'Klicken Sie beim Lesen auf «Lesezeichen», um den Artikel zu speichern.',
+            clearSaved: 'Lesezeichen leeren',
+            clearSavedConfirm: 'Alle Lesezeichen entfernen?',
+            savedToast: 'Artikel gespeichert (offline verfügbar)',
+            removedToast: 'Artikel aus Lesezeichen entfernt',
             historyTitle: 'Verlauf',
-            historyDesc: 'Kürzlich angesehene Artikel.',
+            historyDesc: 'Kürzlich angesehene Artikel in diesem Browser.',
+            historyEmptyTitle: 'Verlauf ist leer',
+            historyEmptyDesc: 'Gelesene Artikel werden automatisch hier erfasst.',
+            clearHistory: 'Verlauf leeren',
+            clearHistoryConfirm: 'Gesamten Verlauf löschen?',
+            readAgain: 'Erneut lesen &rarr;',
+            readArticle: 'Artikel lesen &rarr;',
             ttsPlay: 'Artikel anhören',
             ttsPause: 'Pause',
+            ttsResume: 'Fortsetzen',
             ttsStop: 'Stopp',
             ttsSpeaking: 'Artikel wird vorgelesen...',
+            ttsPaused: 'Wiedergabe pausiert',
+            ttsDefault: 'Audioversion (Text-to-Speech)',
+            articleNotFoundTitle: 'Artikel nicht gefunden',
+            articleNotFoundDesc: 'Dieser Artikel existiert in dieser Sprachversion leider nicht.',
+            netErrorTitle: 'Netzwerkfehler',
+            netErrorDesc: 'Verbindung zur Wikipedia API fehlgeschlagen.',
+            retryBtn: 'Erneut versuchen',
             categories: {
                 people: { query: 'Berühmte Persönlichkeiten', label: 'Menschen & Biografien' },
                 countries: { query: 'Länder und Geographie', label: 'Länder & Geographie' },
@@ -122,6 +237,15 @@
             }
         },
         es: {
+            navSections: 'Secciones',
+            navHome: 'Inicio',
+            navSaved: 'Marcadores',
+            navHistory: 'Historial',
+            navRandom: 'Aleatorio',
+            navCategories: 'Categorías',
+            suggestionsHeader: 'Sugerencias',
+            offlineBanner: 'Estás sin conexión. Los marcadores guardados están disponibles.',
+            offlineBadge: 'Copia sin conexión',
             homeQuery: 'Descubrimientos científicos y tecnología',
             homeTitle: 'Temas Destacados',
             homeDesc: 'Enciclopedia moderna y libre. Explora categorías o busca un artículo.',
@@ -130,13 +254,33 @@
             searchEmpty: 'No se encontraron artículos.',
             searchPlaceholder: 'Buscar en Wikipedia (Ctrl+K)...',
             savedTitle: 'Marcadores',
-            savedDesc: 'Artículos guardados para leer más tarde.',
+            savedDesc: 'Artículos guardados para leer sin conexión.',
+            savedEmptyTitle: 'Sin marcadores',
+            savedEmptyDesc: 'Pulsa «Guardar» en cualquier artículo para tenerlo sin conexión.',
+            clearSaved: 'Borrar marcadores',
+            clearSavedConfirm: '¿Eliminar todos los marcadores guardados?',
+            savedToast: 'Artículo guardado en marcadores',
+            removedToast: 'Artículo eliminado de marcadores',
             historyTitle: 'Historial',
             historyDesc: 'Artículos leídos recientemente.',
+            historyEmptyTitle: 'El historial está vacío',
+            historyEmptyDesc: 'Los artículos que leas aparecerán aquí.',
+            clearHistory: 'Borrar historial',
+            clearHistoryConfirm: '¿Eliminar todo el historial?',
+            readAgain: 'Leer de nuevo &rarr;',
+            readArticle: 'Abrir artículo &rarr;',
             ttsPlay: 'Escuchar artículo',
             ttsPause: 'Pausa',
+            ttsResume: 'Reanudar',
             ttsStop: 'Detener',
             ttsSpeaking: 'Reproduciendo artículo...',
+            ttsPaused: 'Reproducción pausada',
+            ttsDefault: 'Versión en audio (Text-to-Speech)',
+            articleNotFoundTitle: 'Artículo no encontrado',
+            articleNotFoundDesc: 'No existe este artículo en la Wikipedia seleccionada.',
+            netErrorTitle: 'Error de red',
+            netErrorDesc: 'No se pudieron cargar datos desde Wikipedia API.',
+            retryBtn: 'Reintentar',
             categories: {
                 people: { query: 'Biografías de personajes célebres', label: 'Gente y biografías' },
                 countries: { query: 'Países y geografía', label: 'Países y geografía' },
@@ -147,6 +291,15 @@
             }
         },
         fr: {
+            navSections: 'Sections',
+            navHome: 'Accueil',
+            navSaved: 'Signets',
+            navHistory: 'Historique',
+            navRandom: 'Aléatoire',
+            navCategories: 'Catégories',
+            suggestionsHeader: 'Suggestions',
+            offlineBanner: 'Vous êtes hors-ligne. Les signets enregistrés sont accessibles.',
+            offlineBadge: 'Copie hors-ligne',
             homeQuery: 'Découvertes scientifiques et technologie',
             homeTitle: 'Thèmes Principaux',
             homeDesc: 'Encyclopédie moderne et gratuite. Choisissez une catégorie ou lancez une recherche.',
@@ -156,12 +309,32 @@
             searchPlaceholder: 'Rechercher sur Wikipédia (Ctrl+K)...',
             savedTitle: 'Signets',
             savedDesc: 'Articles sauvegardés pour lecture hors-ligne ou ultérieure.',
+            savedEmptyTitle: 'Aucun signet',
+            savedEmptyDesc: 'Cliquez sur «Enregistrer» dans un article pour le lire hors-ligne.',
+            clearSaved: 'Effacer les signets',
+            clearSavedConfirm: 'Supprimer tous les signets?',
+            savedToast: 'Article sauvegardé dans les signets',
+            removedToast: 'Article retiré des signets',
             historyTitle: 'Historique',
             historyDesc: 'Articles consultés récemment.',
+            historyEmptyTitle: 'Historique vide',
+            historyEmptyDesc: 'Les articles consultés s\'afficheront ici automatiquement.',
+            clearHistory: 'Effacer l\'historique',
+            clearHistoryConfirm: 'Effacer tout l\'historique?',
+            readAgain: 'Relire l\'article &rarr;',
+            readArticle: 'Lire l\'article &rarr;',
             ttsPlay: 'Écouter l\'article',
             ttsPause: 'Pause',
+            ttsResume: 'Reprendre',
             ttsStop: 'Arrêter',
             ttsSpeaking: 'Lecture de l\'article en cours...',
+            ttsPaused: 'Lecture suspendue',
+            ttsDefault: 'Version audio (Text-to-Speech)',
+            articleNotFoundTitle: 'Article non trouvé',
+            articleNotFoundDesc: 'Cette page n\'existe pas dans la section Wikipédia sélectionnée.',
+            netErrorTitle: 'Erreur réseau',
+            netErrorDesc: 'Impossible de joindre l\'API Wikipédia.',
+            retryBtn: 'Réessayer',
             categories: {
                 people: { query: 'Biographies de personnalités', label: 'Gens et biographies' },
                 countries: { query: 'Pays et géographie', label: 'Pays et géographie' },
@@ -174,26 +347,46 @@
     };
 
     // =========================================================================
+    // STORAGE HELPERS
+    // =========================================================================
+    function safeStorageGet(key, fallback) {
+        try {
+            const val = localStorage.getItem(key);
+            return val ? JSON.parse(val) : fallback;
+        } catch (e) {
+            console.warn('Storage parsing error for', key, e);
+            return fallback;
+        }
+    }
+
+    // =========================================================================
     // STATE & CONFIGURATION
     // =========================================================================
     const STATE = {
         lang: localStorage.getItem('zeta_wiki_lang') || 'ru',
         theme: localStorage.getItem('zeta_wiki_theme') || 'dark',
-        bookmarks: JSON.parse(localStorage.getItem('zeta_wiki_bookmarks') || '[]'),
-        history: JSON.parse(localStorage.getItem('zeta_wiki_history') || '[]'),
-        readerSettings: JSON.parse(localStorage.getItem('zeta_wiki_reader_settings') || '{"fontSize":17,"fontFamily":"sans","width":"normal"}'),
+        bookmarks: safeStorageGet('zeta_wiki_bookmarks', []),
+        history: safeStorageGet('zeta_wiki_history', []),
+        readerSettings: safeStorageGet('zeta_wiki_reader_settings', { fontSize: 17, fontFamily: 'sans', width: 'normal' }),
         activeAbortController: null,
         currentArticleData: null,
-        currentLangLinks: {}, // Cross-language Wikipedia links
-        cache: new Map(), // In-memory API cache
+        currentLangLinks: {},
+        cache: new Map(),
         searchDebounceTimer: null,
         selectedSuggestionIndex: -1,
         suggestions: [],
+        currentRouteId: 0,
+        currentTOCObserver: null,
         tts: {
             synth: window.speechSynthesis,
             utterance: null,
+            sentences: [],
+            currentSentenceIndex: 0,
             isPlaying: false,
-            isPaused: false
+            isPaused: false,
+            rate: parseFloat(localStorage.getItem('zeta_wiki_tts_rate') || '1.0'),
+            selectedVoiceURI: localStorage.getItem('zeta_wiki_tts_voice') || '',
+            availableVoices: []
         }
     };
 
@@ -207,6 +400,7 @@
         searchClearBtn: document.getElementById('search-clear-btn'),
         searchSuggestions: document.getElementById('search-suggestions'),
         suggestionsList: document.getElementById('suggestions-list'),
+        suggestionsHeader: document.getElementById('suggestions-header'),
         sidebar: document.getElementById('sidebar'),
         sidebarOverlay: document.getElementById('sidebar-overlay'),
         mobileBtn: document.getElementById('mobile-menu-btn'),
@@ -214,6 +408,7 @@
         navLinks: document.querySelectorAll('.nav-link'),
         langSelect: document.getElementById('lang-select'),
         themeToggleBtn: document.getElementById('theme-toggle-btn'),
+        metaThemeColor: document.getElementById('meta-theme-color'),
         bookmarksBadge: document.getElementById('bookmarks-count-badge'),
         historyBadge: document.getElementById('history-count-badge'),
         readingProgressBar: document.getElementById('reading-progress-bar'),
@@ -227,7 +422,13 @@
         fontSizeIndicator: document.getElementById('font-size-indicator'),
         fontChoiceBtns: document.querySelectorAll('.font-choice-btn'),
         widthChoiceBtns: document.querySelectorAll('.width-choice-btn'),
-        offlineBanner: document.getElementById('offline-banner')
+        offlineBanner: document.getElementById('offline-banner'),
+        labelNavSections: document.getElementById('label-nav-sections'),
+        labelNavCategories: document.getElementById('label-nav-categories'),
+        navTextHome: document.getElementById('nav-text-home'),
+        navTextSaved: document.getElementById('nav-text-saved'),
+        navTextHistory: document.getElementById('nav-text-history'),
+        navTextRandom: document.getElementById('nav-text-random')
     };
 
     // =========================================================================
@@ -277,12 +478,37 @@
             const attrs = Array.from(el.attributes);
             for (const attr of attrs) {
                 const attrName = attr.name.toLowerCase();
-                const attrVal = attr.value.trim().toLowerCase();
+                const rawAttrVal = attr.value;
+                const cleanVal = rawAttrVal.trim().toLowerCase().replace(/[\x00-\x20]/g, '');
 
                 if (!ALLOWED_ATTRS.has(attrName) || attrName.startsWith('on')) {
                     el.removeAttribute(attr.name);
-                } else if ((attrName === 'href' || attrName === 'src') && (attrVal.startsWith('javascript:') || attrVal.startsWith('data:text/html'))) {
-                    el.removeAttribute(attr.name);
+                    continue;
+                }
+
+                // Strict URI checking for href & src
+                if (attrName === 'href') {
+                    const isSafeHref = cleanVal.startsWith('http://') ||
+                        cleanVal.startsWith('https://') ||
+                        cleanVal.startsWith('#') ||
+                        cleanVal.startsWith('/wiki/') ||
+                        cleanVal.startsWith('./') ||
+                        cleanVal.startsWith('mailto:');
+
+                    if (!isSafeHref || cleanVal.startsWith('javascript:') || cleanVal.startsWith('vbscript:') || cleanVal.startsWith('data:')) {
+                        el.removeAttribute(attr.name);
+                    }
+                } else if (attrName === 'src') {
+                    const isSafeSrc = cleanVal.startsWith('http://') ||
+                        cleanVal.startsWith('https://') ||
+                        cleanVal.startsWith('data:image/png') ||
+                        cleanVal.startsWith('data:image/jpeg') ||
+                        cleanVal.startsWith('data:image/webp') ||
+                        cleanVal.startsWith('data:image/gif');
+
+                    if (!isSafeSrc) {
+                        el.removeAttribute(attr.name);
+                    }
                 }
             }
 
@@ -291,12 +517,25 @@
                 const href = el.getAttribute('href');
                 if (href) {
                     if (href.startsWith('/wiki/') || href.startsWith('./')) {
-                        const rawTitle = href.replace(/^(\/wiki\/|\.\/)/, '');
+                        let rawTitle = href.replace(/^(\/wiki\/|\.\/)/, '');
+                        // Strip section hash if present to avoid 404 in Wikipedia API
+                        const hashIdx = rawTitle.indexOf('#');
+                        if (hashIdx !== -1) {
+                            rawTitle = rawTitle.slice(0, hashIdx);
+                        }
+                        try {
+                            rawTitle = decodeURIComponent(rawTitle);
+                        } catch (e) {
+                            // Safe fallback on invalid URI encoding
+                        }
                         if (!rawTitle.startsWith('File:') && !rawTitle.startsWith('Файл:')) {
-                            el.setAttribute('href', `#article/${encodeURIComponent(decodeURIComponent(rawTitle))}`);
+                            el.setAttribute('href', `#article/${encodeURIComponent(rawTitle)}`);
                         } else {
                             el.removeAttribute('href');
                         }
+                    } else if (href.startsWith('#')) {
+                        // Mark internal section/citation anchor to prevent SPA 404
+                        el.classList.add('citation-anchor');
                     } else if (href.startsWith('http://') || href.startsWith('https://')) {
                         el.setAttribute('target', '_blank');
                         el.setAttribute('rel', 'noopener noreferrer');
@@ -310,7 +549,7 @@
     }
 
     // =========================================================================
-    // API CLIENT (With Dynamic Language, Langlinks & AbortController)
+    // API CLIENT (With Dynamic Language, Langlinks, AbortController & Redirects)
     // =========================================================================
 
     function getApiBaseUrl() {
@@ -351,34 +590,37 @@
     }
 
     async function fetchWikiSearchWithImages(query, limit = 16) {
-        try {
-            const url = `${getApiBaseUrl()}&action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=${limit}&prop=pageimages|extracts&exchars=180&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=400`;
-            const data = await cachedFetch(url);
-            if (!data || !data.query || !data.query.pages) return [];
+        const url = `${getApiBaseUrl()}&action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=${limit}&prop=pageimages|extracts&exchars=180&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=400`;
+        const data = await cachedFetch(url);
+        if (!data || !data.query || !data.query.pages) return [];
 
-            const pages = Object.values(data.query.pages).sort((a, b) => (a.index || 0) - (b.index || 0));
-            return pages.map(p => ({
-                title: p.title,
-                snippet: p.extract || "",
-                thumbnail: p.thumbnail ? p.thumbnail.source : null
-            }));
-        } catch (e) {
-            console.error("Wiki Search Error:", e);
-            return [];
-        }
+        const pages = Object.values(data.query.pages).sort((a, b) => (a.index || 0) - (b.index || 0));
+        return pages.map(p => ({
+            title: p.title,
+            snippet: p.extract || "",
+            thumbnail: p.thumbnail ? p.thumbnail.source : null
+        }));
     }
 
     async function fetchWikiArticle(title) {
+        // Check if article was saved offline in bookmarks
+        const offlineSaved = STATE.bookmarks.find(b => b.title.toLowerCase() === title.toLowerCase() && b.extract);
+
         try {
-            // Fetch article extract, original image banner, AND language links (prop=langlinks)
-            const url = `${getApiBaseUrl()}&action=query&prop=extracts|pageimages|langlinks&titles=${encodeURIComponent(title)}&piprop=original&lllimit=50`;
+            // prop=extracts|pageimages|langlinks with redirects=1 to resolve redirects like США -> Соединённые Штаты
+            const url = `${getApiBaseUrl()}&action=query&prop=extracts|pageimages|langlinks&titles=${encodeURIComponent(title)}&redirects=1&piprop=original&lllimit=50`;
             const data = await cachedFetch(url);
-            if (!data || !data.query || !data.query.pages) return null;
+            if (!data || !data.query || !data.query.pages) {
+                if (offlineSaved) {
+                    return { ...offlineSaved, isOfflineSaved: true };
+                }
+                return null;
+            }
 
             const pageId = Object.keys(data.query.pages)[0];
             const pageData = data.query.pages[pageId];
 
-            // Parse langlinks
+            // Parse language links for cross-language switcher
             STATE.currentLangLinks = {};
             if (pageData && pageData.langlinks) {
                 pageData.langlinks.forEach(ll => {
@@ -388,15 +630,21 @@
 
             return pageData || null;
         } catch (e) {
-            console.error("Wiki Article Error:", e);
-            return null;
+            if (offlineSaved) {
+                return { ...offlineSaved, isOfflineSaved: true };
+            }
+            throw e;
         }
     }
 
     async function fetchRandomArticle() {
         try {
-            const url = `${getApiBaseUrl()}&action=query&generator=random&grnnamespace=0&grnlimit=1&prop=info`;
-            const data = await cachedFetch(url);
+            // Bypass cache with timestamp nonce so random is always fresh
+            const nonce = Date.now();
+            const url = `${getApiBaseUrl()}&action=query&generator=random&grnnamespace=0&grnlimit=1&prop=info&_t=${nonce}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
             if (!data || !data.query || !data.query.pages) return null;
 
             const page = Object.values(data.query.pages)[0];
@@ -447,18 +695,21 @@
     }
 
     function toggleBookmark(article) {
+        const loc = getLocale();
         const index = STATE.bookmarks.findIndex(b => b.title.toLowerCase() === article.title.toLowerCase());
         if (index > -1) {
             STATE.bookmarks.splice(index, 1);
-            showToast('Статья удалена из закладок', '🗑️');
+            showToast(loc.removedToast, '🗑️');
         } else {
+            // Save full extract for true offline accessibility
             STATE.bookmarks.unshift({
                 title: article.title,
                 snippet: article.snippet || '',
+                extract: article.extract || '',
                 thumbnail: article.thumbnail || null,
                 addedAt: Date.now()
             });
-            showToast('Статья сохранена в закладки', '⭐');
+            showToast(loc.savedToast, '⭐');
         }
         localStorage.setItem('zeta_wiki_bookmarks', JSON.stringify(STATE.bookmarks));
         updateBadges();
@@ -472,9 +723,37 @@
         }
     }
 
+    function removeBookmarkItem(title, e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const loc = getLocale();
+        STATE.bookmarks = STATE.bookmarks.filter(b => b.title.toLowerCase() !== title.toLowerCase());
+        localStorage.setItem('zeta_wiki_bookmarks', JSON.stringify(STATE.bookmarks));
+        updateBadges();
+        showToast(loc.removedToast, '🗑️');
+        if (window.location.hash === '#saved') {
+            renderSavedArticlesView();
+        }
+    }
+
+    function removeHistoryItem(title, e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        STATE.history = STATE.history.filter(h => h.title.toLowerCase() !== title.toLowerCase());
+        localStorage.setItem('zeta_wiki_history', JSON.stringify(STATE.history));
+        updateBadges();
+        showToast('Удалено из истории', '🗑️');
+        if (window.location.hash === '#history') {
+            renderHistoryView();
+        }
+    }
+
     function recordReadingHistory(article) {
         if (!article || !article.title) return;
-        // Deduplicate
         STATE.history = STATE.history.filter(h => h.title.toLowerCase() !== article.title.toLowerCase());
         STATE.history.unshift({
             title: article.title,
@@ -482,89 +761,449 @@
             thumbnail: article.thumbnail || null,
             viewedAt: Date.now()
         });
-        // Limit to 30 items
         if (STATE.history.length > 30) STATE.history.pop();
         localStorage.setItem('zeta_wiki_history', JSON.stringify(STATE.history));
         updateBadges();
     }
 
     // =========================================================================
-    // TEXT-TO-SPEECH (TTS) AUDIO NARRATOR
+    // TEXT-TO-SPEECH (TTS) AUDIO NARRATOR ENGINE
     // =========================================================================
 
-    function stopTTS() {
+    function prepareSpeechSentences(htmlText) {
+        if (!htmlText) return [];
+
+        let text = htmlText;
+
+        // 1. Remove references, footnotes, sup/sub, small, styles
+        text = text.replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ');
+        text = text.replace(/<small\b[^>]*>[\s\S]*?<\/small>/gi, ' ');
+        text = text.replace(/<sub\b[^>]*>[\s\S]*?<\/sub>/gi, ' ');
+        text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ');
+        text = text.replace(/<[^>]*>/g, ' ');
+
+        // 2. Decode entities
+        text = text.replace(/&nbsp;/g, ' ')
+                   .replace(/&#160;/g, ' ')
+                   .replace(/&amp;/g, 'и')
+                   .replace(/&quot;/g, '"')
+                   .replace(/&#39;/g, "'")
+                   .replace(/&[a-z0-9#]+;/gi, ' ');
+
+        // 3. Remove citations in brackets [1], [2], [источник не указан], [править]
+        text = text.replace(/\[[^\]]*\]/g, ' ');
+
+        // 4. Remove IPA phonetic slashes e.g. /ˈdʒɑːvəskrɪpt/ or /dʒeɪ.ɛs/
+        text = text.replace(/\/[^\/\n]{2,50}\//g, ' ');
+
+        // 5. Remove parenthetical foreign phonetic & language notes: (англ. ...), (нем. ...), (фр. ...), etc.
+        text = text.replace(/\(\s*(?:англ\.|нем\.|фр\.|лат\.|исп\.|греч\.|итал\.|швед\.|араб\.|яп\.|кит\.|узб\.|мфа:?)[^)]*\)/gi, ' ');
+
+        // 6. Clean birth/death dates in parentheses e.g. (14 марта 1879 — 18 апреля 1955)
+        text = text.replace(/\(\s*([0-9]{1,2}\s+[а-яёa-z]+\s+[0-9]{4})\s*[—–-]\s*([0-9]{1,2}\s+[а-яёa-z]+\s+[0-9]{4})[^\)]*\)/gi, ', жил с $1 по $2, ');
+        text = text.replace(/\(\s*род\.?\s*([^,)]+)(?:,\s*ум\.?\s*([^)]+))?\)/gi, ', родился $1, ');
+
+        // 7. Expand abbreviations into natural spoken language
+        const abbrevs = [
+            [/\b([0-9]{3,4})\s*гг?\./gi, '$1 года'],
+            [/\b([0-9]+)\s*вв?\./gi, '$1 века'],
+            [/\bг\.\s*(?=[0-9])/gi, 'году '],
+            [/\bт\.\s*е\./gi, 'то есть'],
+            [/\bт\.\s*к\./gi, 'так как'],
+            [/\bт\.\s*д\./gi, 'так далее'],
+            [/\bт\.\s*п\./gi, 'тому подобное'],
+            [/\bи\s*др\./gi, 'и другие'],
+            [/\bаббр\.\s*/gi, 'сокращённо '],
+            [/\bнапр\./gi, 'например'],
+            [/\bмлн\b/gi, 'миллионов'],
+            [/\bмлрд\b/gi, 'миллиардов'],
+            [/\bтыс\.\b/gi, 'тысяч'],
+            [/\bкм\b/gi, 'километров'],
+            [/\bсм\b/gi, 'сантиметров'],
+            [/\bмм\b/gi, 'миллиметров'],
+            [/\bкг\b/gi, 'килограммов'],
+            [/\bруб\./gi, 'рублей']
+        ];
+        abbrevs.forEach(([pat, rep]) => { text = text.replace(pat, rep); });
+
+        // 8. Clean up symbols, brackets, dashes
+        text = text.replace(/[—–]/g, ' — ');
+        text = text.replace(/[\(\)\[\]\{\}\<\>\|\\_#\*\^~]/g, ' ');
+        text = text.replace(/\s*;\s*/g, ', ');
+        text = text.replace(/,\s*,/g, ',');
+        text = text.replace(/\s+/g, ' ').trim();
+
+        // 9. Split into clean, natural sentences
+        const rawSentences = text.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [text];
+        return rawSentences
+            .map(s => s.replace(/^[\s,;—–-]+/, '').trim())
+            .filter(s => s.length > 6 && /[a-zа-яё0-9]/i.test(s));
+    }
+
+    function formatVoiceInfo(voice) {
+        const raw = (voice && voice.name) || '';
+        const lower = raw.toLowerCase();
+        let name = raw
+            .replace(/Microsoft\s*/gi, '')
+            .replace(/Desktop\s*/gi, '')
+            .replace(/Online\s*\(Natural\)\s*/gi, '')
+            .replace(/Natural\s*/gi, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/-\s*Russian/gi, '')
+            .replace(/-\s*English/gi, '')
+            .replace(/русский/gi, '')
+            .trim();
+
+        let icon = '🎙️';
+
+        if (lower.includes('google')) {
+            icon = '🌐';
+            name = 'Google';
+        } else if (lower.includes('irina') || lower.includes('ирина')) {
+            icon = '👩';
+            name = 'Ирина';
+        } else if (lower.includes('pavel') || lower.includes('павел')) {
+            icon = '👨';
+            name = 'Павел';
+        } else if (lower.includes('dariya') || lower.includes('дарья')) {
+            icon = '👩';
+            name = 'Дарья';
+        } else if (lower.includes('svetlana') || lower.includes('светлана')) {
+            icon = '👩';
+            name = 'Светлана';
+        } else if (lower.includes('dmitry') || lower.includes('дмитрий')) {
+            icon = '👨';
+            name = 'Дмитрий';
+        } else if (lower.includes('yuri') || lower.includes('юрий')) {
+            icon = '👨';
+            name = 'Юрий';
+        } else if (/female|zira|susan|hazel|jenny|elena|victoria|anna|tatyana/i.test(lower)) {
+            icon = '👩';
+        } else if (/male|david|george|guy|aleksandr|artem/i.test(lower)) {
+            icon = '👨';
+        }
+
+        if (!name || name.length === 0) {
+            name = raw.split(' ')[0] || 'Голос';
+        }
+
+        return { icon, name, raw };
+    }
+
+    function loadAvailableVoices() {
+        if (!STATE.tts.synth) return [];
+        const allVoices = STATE.tts.synth.getVoices() || [];
+        const langCode = STATE.lang.toLowerCase();
+
+        let matched = allVoices.filter(v => v.lang.toLowerCase().startsWith(langCode));
+        if (matched.length === 0) {
+            matched = allVoices;
+        }
+
+        // Prioritize natural / neural / online voices over legacy robotic synthesizers
+        matched.sort((a, b) => {
+            const isNaturalA = /natural|online|google|neural|apple/i.test(a.name);
+            const isNaturalB = /natural|online|google|neural|apple/i.test(b.name);
+            return (isNaturalB ? 1 : 0) - (isNaturalA ? 1 : 0);
+        });
+
+        STATE.tts.availableVoices = matched;
+        return matched;
+    }
+
+    function renderVoiceSelectorUI() {
+        const container = document.getElementById('tts-voice-container');
+        if (!container) return;
+
+        const voices = loadAvailableVoices();
+        if (voices.length === 0) {
+            container.innerHTML = '<span style="font-size: 0.78rem; color: var(--text-muted); padding: 4px 8px;">Системный голос</span>';
+            return;
+        }
+
+        if (!STATE.tts.selectedVoiceURI || !voices.some(v => v.voiceURI === STATE.tts.selectedVoiceURI)) {
+            STATE.tts.selectedVoiceURI = voices[0].voiceURI;
+            localStorage.setItem('zeta_wiki_tts_voice', STATE.tts.selectedVoiceURI);
+        }
+
+        if (voices.length <= 4) {
+            let html = '<div class="tts-voice-group" role="group" aria-label="Выбор голоса">';
+            voices.forEach(v => {
+                const info = formatVoiceInfo(v);
+                const isActive = v.voiceURI === STATE.tts.selectedVoiceURI;
+                html += `
+                    <button type="button" class="tts-voice-pill ${isActive ? 'active' : ''}" 
+                            data-voice-uri="${escapeHTML(v.voiceURI)}" 
+                            title="${escapeHTML(v.name)}">
+                        <span class="voice-icon">${info.icon}</span>
+                        <span class="voice-label">${escapeHTML(info.name)}</span>
+                    </button>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+
+            container.querySelectorAll('.tts-voice-pill').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const uri = btn.getAttribute('data-voice-uri');
+                    if (uri && uri !== STATE.tts.selectedVoiceURI) {
+                        setTTSVoice(uri);
+                    }
+                });
+            });
+        } else {
+            let html = '<select id="tts-voice-select" class="tts-voice-select" title="Выбор голоса" aria-label="Голос озвучки">';
+            voices.forEach(v => {
+                const info = formatVoiceInfo(v);
+                const isSelected = v.voiceURI === STATE.tts.selectedVoiceURI ? 'selected' : '';
+                html += `<option value="${escapeHTML(v.voiceURI)}" ${isSelected}>${info.icon} ${escapeHTML(info.name)}</option>`;
+            });
+            html += '</select>';
+            container.innerHTML = html;
+
+            const select = document.getElementById('tts-voice-select');
+            select?.addEventListener('change', (e) => {
+                setTTSVoice(e.target.value);
+            });
+        }
+    }
+
+    function updateVoiceSelectorUI() {
+        document.querySelectorAll('.tts-voice-pill').forEach(pill => {
+            pill.classList.toggle('active', pill.getAttribute('data-voice-uri') === STATE.tts.selectedVoiceURI);
+        });
+        const select = document.getElementById('tts-voice-select');
+        if (select && select.value !== STATE.tts.selectedVoiceURI) {
+            select.value = STATE.tts.selectedVoiceURI;
+        }
+    }
+
+    function restartCurrentSentence() {
+        if (!STATE.tts.sentences || STATE.tts.sentences.length === 0) return;
+
+        if (STATE.tts.currentSentenceIndex < 0) STATE.tts.currentSentenceIndex = 0;
+        if (STATE.tts.currentSentenceIndex >= STATE.tts.sentences.length) {
+            STATE.tts.currentSentenceIndex = 0;
+        }
+
+        if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
+            playSentence(STATE.tts.currentSentenceIndex);
+        } else {
+            if (STATE.tts.utterance) {
+                STATE.tts.utterance.onend = null;
+                STATE.tts.utterance.onerror = null;
+            }
+            if (STATE.tts.synth) {
+                STATE.tts.synth.cancel();
+            }
+            updateTTSPlayerUI();
+        }
+    }
+
+    function setTTSVoice(voiceURI) {
+        if (!voiceURI) return;
+        STATE.tts.selectedVoiceURI = voiceURI;
+        localStorage.setItem('zeta_wiki_tts_voice', voiceURI);
+        updateVoiceSelectorUI();
+        restartCurrentSentence();
+    }
+
+    function setTTSSpeed(rate) {
+        STATE.tts.rate = rate;
+        localStorage.setItem('zeta_wiki_tts_rate', String(rate));
+        document.querySelectorAll('.tts-speed-btn').forEach(btn => {
+            btn.classList.toggle('active', parseFloat(btn.getAttribute('data-speed')) === rate);
+        });
+        restartCurrentSentence();
+    }
+
+    function stopTTS(resetIndex = false) {
+        if (STATE.tts.utterance) {
+            STATE.tts.utterance.onend = null;
+            STATE.tts.utterance.onerror = null;
+        }
         if (STATE.tts.synth) {
             STATE.tts.synth.cancel();
         }
         STATE.tts.isPlaying = false;
         STATE.tts.isPaused = false;
+        if (resetIndex) {
+            STATE.tts.currentSentenceIndex = 0;
+        }
         updateTTSPlayerUI();
     }
 
-    function toggleTTS(textToRead) {
+    function playSentence(index) {
+        if (!STATE.tts.synth) return;
+        if (!STATE.tts.sentences || STATE.tts.sentences.length === 0) return;
+
+        if (index < 0) index = 0;
+        if (index >= STATE.tts.sentences.length) {
+            stopTTS(true);
+            showToast('Статья полностью прочитана', '🎧');
+            return;
+        }
+
+        if (STATE.tts.utterance) {
+            STATE.tts.utterance.onend = null;
+            STATE.tts.utterance.onerror = null;
+        }
+
+        STATE.tts.currentSentenceIndex = index;
+        STATE.tts.synth.cancel();
+
+        const sentenceText = STATE.tts.sentences[index];
+        const utterance = new SpeechSynthesisUtterance(sentenceText);
+        STATE.tts.utterance = utterance;
+
+        utterance.rate = STATE.tts.rate;
+        utterance.pitch = 1.0;
+
+        const voices = STATE.tts.availableVoices.length > 0 ? STATE.tts.availableVoices : loadAvailableVoices();
+        const voice = voices.find(v => v.voiceURI === STATE.tts.selectedVoiceURI) || voices[0];
+        if (voice) {
+            utterance.voice = voice;
+            utterance.lang = voice.lang;
+        } else {
+            const langMap = { ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+            utterance.lang = langMap[STATE.lang] || 'ru-RU';
+        }
+
+        utterance.onend = () => {
+            if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
+                playSentence(index + 1);
+            }
+        };
+
+        utterance.onerror = (e) => {
+            if (e.error !== 'canceled' && e.error !== 'interrupted') {
+                console.warn('TTS playback error:', e);
+                if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
+                    playSentence(index + 1);
+                }
+            }
+        };
+
+        STATE.tts.isPlaying = true;
+        STATE.tts.isPaused = false;
+        updateTTSPlayerUI();
+
+        setTimeout(() => {
+            if (STATE.tts.isPlaying && !STATE.tts.isPaused && STATE.tts.utterance === utterance) {
+                STATE.tts.synth.speak(utterance);
+            }
+        }, 25);
+    }
+
+    function toggleTTS(rawHtmlOrText) {
         if (!STATE.tts.synth) {
             showToast('Синтез речи не поддерживается браузером', '⚠️');
             return;
         }
 
         if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
-            STATE.tts.synth.pause();
+            if (STATE.tts.utterance) {
+                STATE.tts.utterance.onend = null;
+                STATE.tts.utterance.onerror = null;
+            }
+            STATE.tts.synth.cancel();
+            STATE.tts.isPlaying = false;
             STATE.tts.isPaused = true;
             updateTTSPlayerUI();
             return;
         }
 
-        if (STATE.tts.isPaused) {
-            STATE.tts.synth.resume();
-            STATE.tts.isPaused = false;
-            updateTTSPlayerUI();
-            return;
+        if (!STATE.tts.sentences || STATE.tts.sentences.length === 0) {
+            const sentences = prepareSpeechSentences(rawHtmlOrText);
+            if (sentences.length === 0) {
+                showToast('В статье нет текста для воспроизведения', '⚠️');
+                return;
+            }
+            STATE.tts.sentences = sentences;
+            STATE.tts.currentSentenceIndex = 0;
         }
 
-        // Fresh Speech
-        stopTTS();
-        const cleanText = textToRead.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 4000);
-        STATE.tts.utterance = new SpeechSynthesisUtterance(cleanText);
+        if (STATE.tts.currentSentenceIndex >= STATE.tts.sentences.length) {
+            STATE.tts.currentSentenceIndex = 0;
+        }
 
-        // Voice matching active language
-        const langMap = { ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
-        STATE.tts.utterance.lang = langMap[STATE.lang] || 'ru-RU';
-        STATE.tts.utterance.rate = 1.05;
+        playSentence(STATE.tts.currentSentenceIndex);
+    }
 
-        STATE.tts.utterance.onend = () => {
-            stopTTS();
-        };
+    function nextSentence() {
+        if (!STATE.tts.sentences || !STATE.tts.sentences.length) return;
+        if (STATE.tts.currentSentenceIndex < STATE.tts.sentences.length - 1) {
+            const nextIdx = STATE.tts.currentSentenceIndex + 1;
+            if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
+                playSentence(nextIdx);
+            } else {
+                STATE.tts.currentSentenceIndex = nextIdx;
+                updateTTSPlayerUI();
+            }
+        }
+    }
 
-        STATE.tts.utterance.onerror = () => {
-            stopTTS();
-        };
-
-        STATE.tts.synth.speak(STATE.tts.utterance);
-        STATE.tts.isPlaying = true;
-        STATE.tts.isPaused = false;
-        updateTTSPlayerUI();
+    function prevSentence() {
+        if (!STATE.tts.sentences || !STATE.tts.sentences.length) return;
+        if (STATE.tts.currentSentenceIndex > 0) {
+            const prevIdx = STATE.tts.currentSentenceIndex - 1;
+            if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
+                playSentence(prevIdx);
+            } else {
+                STATE.tts.currentSentenceIndex = prevIdx;
+                updateTTSPlayerUI();
+            }
+        }
     }
 
     function updateTTSPlayerUI() {
         const player = document.getElementById('article-tts-player');
         const playBtn = document.getElementById('tts-play-btn');
         const statusText = document.getElementById('tts-status-text');
-        if (!player || !playBtn) return;
+        const counterText = document.getElementById('tts-counter-text');
+        const progressFill = document.getElementById('tts-progress-fill');
+        const sentencePreview = document.getElementById('tts-sentence-preview');
+        const prevBtn = document.getElementById('tts-prev-btn');
+        const nextBtn = document.getElementById('tts-next-btn');
 
+        if (!player || !playBtn) return;
         const loc = getLocale();
+        const total = STATE.tts.sentences.length;
+        const current = STATE.tts.currentSentenceIndex;
+
         if (STATE.tts.isPlaying && !STATE.tts.isPaused) {
             player.classList.add('tts-playing');
-            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> ${loc.ttsPause}`;
+            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> <span id="tts-play-label">${loc.ttsPause}</span>`;
             if (statusText) statusText.textContent = loc.ttsSpeaking;
         } else if (STATE.tts.isPaused) {
             player.classList.remove('tts-playing');
-            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Возобновить`;
-            if (statusText) statusText.textContent = 'Озвучивание приостановлено';
+            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="tts-play-label">${loc.ttsResume}</span>`;
+            if (statusText) statusText.textContent = loc.ttsPaused;
         } else {
             player.classList.remove('tts-playing');
-            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ${loc.ttsPlay}`;
-            if (statusText) statusText.textContent = 'Аудиоверсия статьи (Text-to-Speech)';
+            playBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="tts-play-label">${loc.ttsPlay}</span>`;
+            if (statusText) statusText.textContent = loc.ttsDefault;
         }
+
+        // Progress bar and counter
+        if (total > 0) {
+            const isStarted = STATE.tts.isPlaying || STATE.tts.isPaused || current > 0;
+            const pct = isStarted ? Math.min(100, Math.round(((current + 1) / total) * 100)) : 0;
+            if (progressFill) progressFill.style.width = `${pct}%`;
+            if (counterText) counterText.textContent = `${current + 1} / ${total} (${pct}%)`;
+            if (sentencePreview && STATE.tts.sentences[current]) {
+                sentencePreview.innerHTML = `<span>«${escapeHTML(STATE.tts.sentences[current])}»</span>`;
+            }
+        } else {
+            if (progressFill) progressFill.style.width = '0%';
+            if (counterText) counterText.textContent = '0 / 0';
+            if (sentencePreview) sentencePreview.innerHTML = `<span>Нажмите «Слушать статью», чтобы начать естественное воспроизведение.</span>`;
+        }
+
+        const canNavigate = total > 0;
+        if (prevBtn) prevBtn.disabled = !canNavigate || current <= 0;
+        if (nextBtn) nextBtn.disabled = !canNavigate || current >= total - 1;
     }
 
     // =========================================================================
@@ -698,8 +1337,17 @@
             }
         });
 
-        // Update category label translations
+        // Full UI Translation
         const loc = getLocale();
+        if (DOM.labelNavSections) DOM.labelNavSections.textContent = loc.navSections;
+        if (DOM.labelNavCategories) DOM.labelNavCategories.textContent = loc.navCategories;
+        if (DOM.navTextHome) DOM.navTextHome.textContent = loc.navHome;
+        if (DOM.navTextSaved) DOM.navTextSaved.textContent = loc.navSaved;
+        if (DOM.navTextHistory) DOM.navTextHistory.textContent = loc.navHistory;
+        if (DOM.navTextRandom) DOM.navTextRandom.textContent = loc.navRandom;
+        if (DOM.suggestionsHeader) DOM.suggestionsHeader.textContent = loc.suggestionsHeader;
+        if (DOM.searchInput) DOM.searchInput.placeholder = loc.searchPlaceholder;
+
         document.querySelectorAll('.cat-label').forEach(label => {
             const catKey = label.getAttribute('data-cat');
             if (loc.categories[catKey]) {
@@ -707,8 +1355,9 @@
             }
         });
 
-        if (DOM.searchInput) {
-            DOM.searchInput.placeholder = loc.searchPlaceholder;
+        if (DOM.offlineBanner) {
+            const span = DOM.offlineBanner.querySelector('span');
+            if (span) span.textContent = loc.offlineBanner;
         }
     }
 
@@ -730,7 +1379,7 @@
                     <div class="error-icon">🔍</div>
                     <div class="error-title">Ничего не найдено</div>
                     <div class="error-desc">${escapeHTML(emptyMsg || loc.searchEmpty)}</div>
-                    <a href="#home" class="btn-primary">На главную</a>
+                    <a href="#home" class="btn-primary">${loc.navHome}</a>
                 </div>
             `;
         } else {
@@ -750,7 +1399,7 @@
                         <h2 class="wiki-card-title">${safeItemTitle}</h2>
                         <p class="wiki-card-snippet">${safeSnippet}</p>
                         <div class="wiki-card-footer">
-                            <span>Читать статью &rarr;</span>
+                            <span>${loc.readArticle}</span>
                         </div>
                     </a>
                 `;
@@ -771,7 +1420,7 @@
                     <h1 class="page-title">${loc.savedTitle}</h1>
                     <p class="page-desc">${loc.savedDesc}</p>
                 </div>
-                ${items.length > 0 ? `<button id="btn-clear-bookmarks" class="article-tool-btn">Очистить закладки</button>` : ''}
+                ${items.length > 0 ? `<button id="btn-clear-bookmarks" class="article-tool-btn">${loc.clearSaved}</button>` : ''}
             </div>
         `;
 
@@ -779,14 +1428,14 @@
             html += `
                 <div class="error-state-card">
                     <div class="error-icon">⭐</div>
-                    <div class="error-title">Закладок пока нет</div>
-                    <div class="error-desc">Нажмите кнопку «В закладки» во время чтения любой статьи, чтобы сохранить её сюда.</div>
-                    <a href="#home" class="btn-primary">Исследовать темы</a>
+                    <div class="error-title">${loc.savedEmptyTitle}</div>
+                    <div class="error-desc">${loc.savedEmptyDesc}</div>
+                    <a href="#home" class="btn-primary">${loc.navHome}</a>
                 </div>
             `;
         } else {
             html += `<div class="grid-cards">`;
-            items.forEach(item => {
+            items.forEach((item, idx) => {
                 const safeTitle = escapeHTML(item.title);
                 const safeSnippet = escapeHTML(item.snippet || 'Статья сохранена.');
                 const imgMarkup = item.thumbnail
@@ -794,16 +1443,19 @@
                     : `<div class="wiki-card-placeholder-img">${safeTitle.charAt(0)}</div>`;
 
                 html += `
-                    <a href="#article/${encodeURIComponent(item.title)}" class="wiki-card">
-                        <div class="wiki-card-img-wrapper">
-                            ${imgMarkup}
-                        </div>
-                        <h2 class="wiki-card-title">${safeTitle}</h2>
-                        <p class="wiki-card-snippet">${safeSnippet}</p>
-                        <div class="wiki-card-footer">
-                            <span>Открыть статью &rarr;</span>
-                        </div>
-                    </a>
+                    <div class="wiki-card-wrapper" style="position: relative;">
+                        <a href="#article/${encodeURIComponent(item.title)}" class="wiki-card">
+                            <button type="button" class="card-remove-btn" data-remove-bookmark="${encodeURIComponent(item.title)}" title="Удалить из закладок" aria-label="Удалить">✕</button>
+                            <div class="wiki-card-img-wrapper">
+                                ${imgMarkup}
+                            </div>
+                            <h2 class="wiki-card-title">${safeTitle}</h2>
+                            <p class="wiki-card-snippet">${safeSnippet}</p>
+                            <div class="wiki-card-footer">
+                                <span>${loc.readArticle}</span>
+                            </div>
+                        </a>
+                    </div>
                 `;
             });
             html += `</div>`;
@@ -812,14 +1464,23 @@
         DOM.appContent.innerHTML = html;
         document.title = `${loc.savedTitle} (${items.length}) — ZETA Wiki`;
 
+        // Clear all bookmarks
         document.getElementById('btn-clear-bookmarks')?.addEventListener('click', () => {
-            if (confirm('Очистить все закладки?')) {
+            if (confirm(loc.clearSavedConfirm)) {
                 STATE.bookmarks = [];
                 localStorage.setItem('zeta_wiki_bookmarks', '[]');
                 updateBadges();
                 renderSavedArticlesView();
-                showToast('Все закладки удалены', '🗑️');
+                showToast(loc.removedToast, '🗑️');
             }
+        });
+
+        // Individual remove buttons
+        DOM.appContent.querySelectorAll('[data-remove-bookmark]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const title = decodeURIComponent(btn.getAttribute('data-remove-bookmark'));
+                removeBookmarkItem(title, e);
+            });
         });
     }
 
@@ -832,7 +1493,7 @@
                     <h1 class="page-title">${loc.historyTitle}</h1>
                     <p class="page-desc">${loc.historyDesc}</p>
                 </div>
-                ${items.length > 0 ? `<button id="btn-clear-history" class="article-tool-btn">Очистить историю</button>` : ''}
+                ${items.length > 0 ? `<button id="btn-clear-history" class="article-tool-btn">${loc.clearHistory}</button>` : ''}
             </div>
         `;
 
@@ -840,14 +1501,14 @@
             html += `
                 <div class="error-state-card">
                     <div class="error-icon">🕒</div>
-                    <div class="error-title">История пуста</div>
-                    <div class="error-desc">Прочитанные статьи будут автоматически сохраняться в этом списке.</div>
-                    <a href="#home" class="btn-primary">На главную</a>
+                    <div class="error-title">${loc.historyEmptyTitle}</div>
+                    <div class="error-desc">${loc.historyEmptyDesc}</div>
+                    <a href="#home" class="btn-primary">${loc.navHome}</a>
                 </div>
             `;
         } else {
             html += `<div class="grid-cards">`;
-            items.forEach(item => {
+            items.forEach((item, idx) => {
                 const safeTitle = escapeHTML(item.title);
                 const safeSnippet = escapeHTML(item.snippet || 'Статья была прочитана.');
                 const timeStr = item.viewedAt ? new Date(item.viewedAt).toLocaleDateString() : '';
@@ -856,17 +1517,20 @@
                     : `<div class="wiki-card-placeholder-img">${safeTitle.charAt(0)}</div>`;
 
                 html += `
-                    <a href="#article/${encodeURIComponent(item.title)}" class="wiki-card">
-                        <div class="wiki-card-img-wrapper">
-                            ${imgMarkup}
-                        </div>
-                        <h2 class="wiki-card-title">${safeTitle}</h2>
-                        <p class="wiki-card-snippet">${safeSnippet}</p>
-                        <div class="wiki-card-footer">
-                            <span>Прочитать снова &rarr;</span>
-                            <small style="color: var(--text-muted);">${timeStr}</small>
-                        </div>
-                    </a>
+                    <div class="wiki-card-wrapper" style="position: relative;">
+                        <a href="#article/${encodeURIComponent(item.title)}" class="wiki-card">
+                            <button type="button" class="card-remove-btn" data-remove-history="${encodeURIComponent(item.title)}" title="Удалить из истории" aria-label="Удалить">✕</button>
+                            <div class="wiki-card-img-wrapper">
+                                ${imgMarkup}
+                            </div>
+                            <h2 class="wiki-card-title">${safeTitle}</h2>
+                            <p class="wiki-card-snippet">${safeSnippet}</p>
+                            <div class="wiki-card-footer">
+                                <span>${loc.readAgain}</span>
+                                <small style="color: var(--text-muted);">${timeStr}</small>
+                            </div>
+                        </a>
+                    </div>
                 `;
             });
             html += `</div>`;
@@ -875,8 +1539,9 @@
         DOM.appContent.innerHTML = html;
         document.title = `${loc.historyTitle} — ZETA Wiki`;
 
+        // Clear all history
         document.getElementById('btn-clear-history')?.addEventListener('click', () => {
-            if (confirm('Очистить историю просмотров?')) {
+            if (confirm(loc.clearHistoryConfirm)) {
                 STATE.history = [];
                 localStorage.setItem('zeta_wiki_history', '[]');
                 updateBadges();
@@ -884,39 +1549,48 @@
                 showToast('История просмотров очищена', '🗑️');
             }
         });
+
+        // Individual remove buttons
+        DOM.appContent.querySelectorAll('[data-remove-history]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const title = decodeURIComponent(btn.getAttribute('data-remove-history'));
+                removeHistoryItem(title, e);
+            });
+        });
     }
 
     function renderArticleView(pageData) {
-        stopTTS();
+        stopTTS(true);
+        const loc = getLocale();
 
         if (!pageData || pageData.missing !== undefined) {
             DOM.appContent.innerHTML = `
                 <div class="error-state-card">
                     <div class="error-icon">⚠️</div>
-                    <div class="error-title">Статья не найдена</div>
-                    <div class="error-desc">К сожалению, такой страницы в выбранном языковом разделе Википедии нет.</div>
-                    <a href="#home" class="btn-primary">На главную</a>
+                    <div class="error-title">${loc.articleNotFoundTitle}</div>
+                    <div class="error-desc">${loc.articleNotFoundDesc}</div>
+                    <a href="#home" class="btn-primary">${loc.navHome}</a>
                 </div>
             `;
-            document.title = 'Статья не найдена — ZETA Wiki';
+            document.title = `${loc.articleNotFoundTitle} — ZETA Wiki`;
             return;
         }
 
         const safeTitle = escapeHTML(pageData.title);
         const cleanHTML = sanitizeArticleHTML(pageData.extract || '');
-        const originalImageUrl = pageData.original ? pageData.original.source : null;
+        const originalImageUrl = pageData.original ? pageData.original.source : (pageData.thumbnail || null);
         const bookmarked = isBookmarked(pageData.title);
 
         const textOnly = (pageData.extract || '').replace(/<[^>]*>/g, ' ');
-        const wordCount = textOnly.trim().split(/\s+/).length;
+        const wordCount = textOnly.trim().split(/\s+/).filter(Boolean).length;
         const readMinutes = Math.max(1, Math.ceil(wordCount / 180));
         const wikiSourceUrl = `https://${STATE.lang}.wikipedia.org/wiki/${encodeURIComponent(pageData.title)}`;
-        const loc = getLocale();
 
         let html = `
             <div class="article-view-layout">
                 <article class="article-main-column">
                     <header class="article-header">
+                        ${pageData.isOfflineSaved ? `<div class="offline-badge-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 12px;">💾 ${loc.offlineBadge}</div>` : ''}
                         <h1 class="article-title">${safeTitle}</h1>
                         
                         <div class="article-toolbar">
@@ -943,22 +1617,59 @@
                             </div>
                         </div>
 
-                        <!-- Audio TTS Narrator Widget -->
+                        <!-- Modernized Audio TTS Narrator Widget -->
                         <div class="article-tts-player" id="article-tts-player">
-                            <button id="tts-play-btn" class="tts-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                ${loc.ttsPlay}
-                            </button>
-                            <button id="tts-stop-btn" class="tts-btn-stop" title="Остановить">${loc.ttsStop}</button>
-                            
-                            <div class="tts-audio-waves">
-                                <div class="audio-bar"></div>
-                                <div class="audio-bar"></div>
-                                <div class="audio-bar"></div>
-                                <div class="audio-bar"></div>
+                            <div class="tts-header-row">
+                                <div class="tts-controls-main">
+                                    <button id="tts-play-btn" class="tts-btn" title="Воспроизвести / Пауза">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        <span id="tts-play-label">${loc.ttsPlay}</span>
+                                    </button>
+                                    <button id="tts-prev-btn" class="tts-ctrl-icon-btn" title="Предыдущее предложение" aria-label="Предыдущее предложение">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+                                    </button>
+                                    <button id="tts-next-btn" class="tts-ctrl-icon-btn" title="Следующее предложение" aria-label="Следующее предложение">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+                                    </button>
+                                    <button id="tts-stop-btn" class="tts-ctrl-icon-btn btn-stop" title="Остановить" aria-label="Остановить">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>
+                                    </button>
+
+                                    <div class="tts-audio-waves">
+                                        <div class="audio-bar"></div>
+                                        <div class="audio-bar"></div>
+                                        <div class="audio-bar"></div>
+                                        <div class="audio-bar"></div>
+                                        <div class="audio-bar"></div>
+                                        <div class="audio-bar"></div>
+                                    </div>
+                                </div>
+
+                                <div class="tts-meta-controls">
+                                    <div id="tts-voice-container" class="tts-voice-container"></div>
+
+                                    <div class="tts-speed-group" title="Скорость воспроизведения">
+                                        <button class="tts-speed-btn ${STATE.tts.rate === 0.8 ? 'active' : ''}" data-speed="0.8">0.8x</button>
+                                        <button class="tts-speed-btn ${STATE.tts.rate === 1.0 ? 'active' : ''}" data-speed="1.0">1.0x</button>
+                                        <button class="tts-speed-btn ${STATE.tts.rate === 1.2 ? 'active' : ''}" data-speed="1.2">1.2x</button>
+                                        <button class="tts-speed-btn ${STATE.tts.rate === 1.5 ? 'active' : ''}" data-speed="1.5">1.5x</button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <span class="tts-status-text" id="tts-status-text">Аудиоверсия статьи (Text-to-Speech)</span>
+                            <div class="tts-progress-wrap">
+                                <div class="tts-progress-meta">
+                                    <span id="tts-status-text">${loc.ttsDefault}</span>
+                                    <span id="tts-counter-text">0 / 0</span>
+                                </div>
+                                <div class="tts-progress-bar-bg">
+                                    <div id="tts-progress-fill" class="tts-progress-bar-fill"></div>
+                                </div>
+                            </div>
+
+                            <div id="tts-sentence-preview" class="tts-sentence-preview">
+                                <span>Нажмите «Слушать статью», чтобы начать естественное воспроизведение.</span>
+                            </div>
                         </div>
 
                         <!-- Mobile Collapsible Table of Contents -->
@@ -991,10 +1702,11 @@
         DOM.appContent.innerHTML = html;
         document.title = `${pageData.title} — ZETA Wiki`;
 
-        // Cache and Record History
+        // Cache and Record History with extract for offline capability
         STATE.currentArticleData = {
             title: pageData.title,
             snippet: textOnly.slice(0, 150),
+            extract: pageData.extract || '',
             thumbnail: originalImageUrl
         };
         recordReadingHistory(STATE.currentArticleData);
@@ -1005,26 +1717,71 @@
         });
 
         document.getElementById('btn-share-action')?.addEventListener('click', () => {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showToast('Ссылка скопирована в буфер обмена', '🔗');
-            }).catch(() => {
-                showToast('Не удалось скопировать', '❌');
-            });
+            if (navigator.share) {
+                navigator.share({
+                    title: pageData.title,
+                    text: pageData.title + ' — ZETA Wiki',
+                    url: window.location.href
+                }).catch(() => { });
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast('Ссылка скопирована в буфер обмена', '🔗');
+                }).catch(() => {
+                    showToast('Не удалось скопировать', '❌');
+                });
+            }
         });
 
         // TTS Audio Listeners
         document.getElementById('tts-play-btn')?.addEventListener('click', () => {
-            toggleTTS(textOnly);
+            toggleTTS(pageData.extract || '');
         });
 
         document.getElementById('tts-stop-btn')?.addEventListener('click', () => {
-            stopTTS();
+            stopTTS(true);
         });
 
-        // Enhance Code Blocks with Copy button
-        enhanceCodeBlocks();
+        document.getElementById('tts-prev-btn')?.addEventListener('click', () => {
+            prevSentence();
+        });
 
-        // Generate Table of Contents
+        document.getElementById('tts-next-btn')?.addEventListener('click', () => {
+            nextSentence();
+        });
+
+        document.querySelectorAll('.tts-speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const speed = parseFloat(btn.getAttribute('data-speed'));
+                if (!isNaN(speed)) setTTSSpeed(speed);
+            });
+        });
+
+        // Pre-parse speech sentences so counter and preview are ready immediately
+        STATE.tts.sentences = prepareSpeechSentences(pageData.extract || '');
+        STATE.tts.currentSentenceIndex = 0;
+        updateTTSPlayerUI();
+
+        // Initialize voice selector UI (Pills for Google / Irina / Pavel)
+        renderVoiceSelectorUI();
+
+        // Intercept internal in-page anchors & citations to prevent SPA 404
+        const articleBody = document.getElementById('article-body');
+        articleBody?.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href^="#"]');
+            if (link) {
+                const targetId = link.getAttribute('href').slice(1);
+                e.preventDefault();
+                if (targetId) {
+                    const targetEl = document.getElementById(targetId) || document.querySelector(`[name="${CSS.escape(targetId)}"]`);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        });
+
+        // Enhance Code Blocks & Generate TOC
+        enhanceCodeBlocks();
         generateTableOfContents();
     }
 
@@ -1050,6 +1807,8 @@
                 navigator.clipboard.writeText(pre.textContent).then(() => {
                     copyBtn.textContent = 'Скопировано!';
                     setTimeout(() => copyBtn.textContent = 'Копировать', 2000);
+                }).catch(() => {
+                    showToast('Не удалось скопировать текст', '❌');
                 });
             });
         });
@@ -1063,7 +1822,15 @@
         const mobileTocAccordion = document.getElementById('mobile-toc-accordion');
         if (!articleBody || !tocList || !tocColumn) return;
 
-        const headings = articleBody.querySelectorAll('h2, h3');
+        // Disconnect previous IntersectionObserver
+        if (STATE.currentTOCObserver) {
+            STATE.currentTOCObserver.disconnect();
+            STATE.currentTOCObserver = null;
+        }
+
+        const rawHeadings = Array.from(articleBody.querySelectorAll('h2, h3'));
+        const headings = rawHeadings.filter(h => h.textContent.trim().length > 0);
+
         if (headings.length < 2) {
             tocColumn.style.display = 'none';
             if (mobileTocAccordion) mobileTocAccordion.style.display = 'none';
@@ -1071,7 +1838,7 @@
         }
 
         headings.forEach((heading, index) => {
-            const headingId = `sec-${index}`;
+            const headingId = heading.id || `sec-${index}`;
             heading.id = headingId;
 
             // Desktop TOC item
@@ -1084,7 +1851,7 @@
             a.textContent = heading.textContent.trim();
             a.addEventListener('click', (e) => {
                 e.preventDefault();
-                heading.scrollIntoView({ behavior: 'smooth' });
+                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
             li.appendChild(a);
             tocList.appendChild(li);
@@ -1097,16 +1864,16 @@
                 mA.textContent = heading.textContent.trim();
                 mA.addEventListener('click', (e) => {
                     e.preventDefault();
-                    mobileTocAccordion.removeAttribute('open');
-                    heading.scrollIntoView({ behavior: 'smooth' });
+                    if (mobileTocAccordion) mobileTocAccordion.removeAttribute('open');
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
                 mLi.appendChild(mA);
                 mobileTocList.appendChild(mLi);
             }
         });
 
-        // IntersectionObserver for active heading
-        const observer = new IntersectionObserver((entries) => {
+        // Track active heading
+        STATE.currentTOCObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const id = entry.target.id;
@@ -1117,7 +1884,7 @@
             });
         }, { root: DOM.appContent, threshold: 0.2 });
 
-        headings.forEach(h => observer.observe(h));
+        headings.forEach(h => STATE.currentTOCObserver.observe(h));
     }
 
     function renderDeveloperPortal() {
@@ -1153,7 +1920,6 @@
                     </h2>
 
                     <div class="dev-timeline">
-                        <!-- Step 1 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1170,7 +1936,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 2 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1183,11 +1948,10 @@
                             </div>
                         </div>
 
-                        <!-- Step 3 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
-                                <h3 class="timeline-title">kakoyto год: Интернет, переезд и открытие Minecraft</h3>
+                                <h3 class="timeline-title">Интернет, переезд и открытие Minecraft</h3>
                                 <span class="timeline-badge">7 лет</span>
                             </div>
                             <div class="timeline-body">
@@ -1196,7 +1960,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 4 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1212,7 +1975,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 5 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1225,7 +1987,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 6 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1238,12 +1999,11 @@
                             </div>
                         </div>
 
-                        <!-- Step 7 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
                                 <h3 class="timeline-title">Эксперимент с ОС: 23 переустановки</h3>
-                                <span class="timeline-badge">Конец 2023 года</span>
+                                <span class="timeline-badge">Инженерный азарт</span>
                             </div>
                             <div class="timeline-body">
                                 <p>Я увлёкся операционными системами настолько, что за один сезон переустановил систему около <strong>23 раз</strong>! На флешку по очереди записывались:</p>
@@ -1254,7 +2014,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 8 -->
                         <div class="timeline-card">
                             <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
                             <div class="timeline-header">
@@ -1262,14 +2021,13 @@
                                 <span class="timeline-badge">2024–2026</span>
                             </div>
                             <div class="timeline-body">
-                                <p>С приходом генеративного ИИ я погрузился в изучение нейросетей. Пытался обучить собственную AI-модель (железа не хватало, обучение шло медленно, но проект остался сохранён на <strong>GitHub</strong> и дал колоссальный опыт архитектуры).</p>
+                                <p>С приходом генеративного ИИ я погрузился в изучение нейросетей. Пытался обучить собственную AI-модель (железа не хватало, обучение шло медленно, но проект дал колоссальный опыт архитектуры).</p>
                                 <p>Сегодня я активно использую современные AI-инструменты разработки (включая Codex). Для меня ИИ — это не замена мышления программиста, а <strong>мощнейший мультипликатор</strong>, позволяющий одному человеку реализовывать масштабные идеи со скоростью целой команды.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Три эволюционных вопроса -->
                 <div style="margin: 48px 0 24px;">
                     <h2 class="dev-section-heading">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1300,7 +2058,6 @@
                     </div>
                 </div>
 
-                <!-- Dedication to Older Brother -->
                 <div class="dev-brother-card">
                     <div class="brother-card-header">
                         <div class="brother-icon-circle">⭐</div>
@@ -1315,7 +2072,6 @@
                     </div>
                 </div>
 
-                <!-- VIGER Dev Сегодня -->
                 <div style="margin: 48px 0;">
                     <h2 class="dev-section-heading">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1356,7 +2112,6 @@
                     </div>
                 </div>
 
-                <!-- Footer Navigation -->
                 <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
                     <a href="#home" class="btn-primary">Вернуться к энциклопедии</a>
                     <a href="#random" class="article-tool-btn">🎲 Случайная статья</a>
@@ -1367,20 +2122,24 @@
     }
 
     // =========================================================================
-    // ROUTER
+    // ROUTER WITH GENERATION TOKEN (RACE CONDITION FREE)
     // =========================================================================
 
     async function handleRoute() {
+        stopTTS();
+        const routeId = ++STATE.currentRouteId;
         const hash = window.location.hash || '#home';
         updateActiveNav(hash);
         closeMobileSidebar();
         DOM.appContent.scrollTo({ top: 0, behavior: 'instant' });
+        if (DOM.readingProgressBar) DOM.readingProgressBar.style.width = '0%';
         const loc = getLocale();
 
         try {
             if (hash === '#home' || hash === '') {
                 showSkeletonGrid();
                 const items = await fetchWikiSearchWithImages(loc.homeQuery, 16);
+                if (routeId !== STATE.currentRouteId) return;
                 renderCardsGrid(items, loc.homeTitle, loc.homeDesc);
             }
             else if (hash === '#saved') {
@@ -1392,8 +2151,10 @@
             else if (hash === '#random') {
                 showSkeletonArticle();
                 const randomTitle = await fetchRandomArticle();
+                if (routeId !== STATE.currentRouteId) return;
                 if (randomTitle) {
-                    window.location.hash = `#article/${encodeURIComponent(randomTitle)}`;
+                    // Use replace to prevent infinite back-button loop!
+                    window.location.replace(`#article/${encodeURIComponent(randomTitle)}`);
                 } else {
                     DOM.appContent.innerHTML = `<div class="error-state-card"><div class="error-title">Ошибка</div><div class="error-desc">Не удалось получить случайную статью.</div></div>`;
                 }
@@ -1403,44 +2164,55 @@
                 const catObj = loc.categories[catSlug] || { query: catSlug, label: catSlug };
                 showSkeletonGrid();
                 const items = await fetchWikiSearchWithImages(catObj.query, 18);
+                if (routeId !== STATE.currentRouteId) return;
                 renderCardsGrid(items, catObj.label, `Подборка актуальных статей по теме «${catObj.label}».`);
             }
             else if (hash.startsWith('#search/')) {
                 const query = decodeURIComponent(hash.replace('#search/', ''));
                 showSkeletonGrid();
                 const items = await fetchWikiSearchWithImages(query, 24);
+                if (routeId !== STATE.currentRouteId) return;
                 renderCardsGrid(items, loc.searchTitle, loc.searchDesc.replace('{query}', query));
             }
             else if (hash.startsWith('#article/')) {
                 const title = decodeURIComponent(hash.replace('#article/', ''));
                 showSkeletonArticle();
                 const articleData = await fetchWikiArticle(title);
+                if (routeId !== STATE.currentRouteId) return;
                 renderArticleView(articleData);
             }
             else if (hash === '#viger') {
                 renderDeveloperPortal();
             }
             else {
+                // If it's a stray in-page anchor, do not show 404
+                if (hash.startsWith('#cite_note') || hash.startsWith('#sec-')) {
+                    return;
+                }
                 DOM.appContent.innerHTML = `
                     <div class="error-state-card">
                         <div class="error-icon">404</div>
                         <div class="error-title">Страница не найдена</div>
                         <div class="error-desc">Такого раздела не существует. Воспользуйтесь меню или строкой поиска.</div>
-                        <a href="#home" class="btn-primary">На главную</a>
+                        <a href="#home" class="btn-primary">${loc.navHome}</a>
                     </div>
                 `;
                 document.title = 'Страница не найдена — ZETA Wiki';
             }
         } catch (err) {
-            console.error('Route handling error:', err);
+            if (routeId !== STATE.currentRouteId) return;
+            console.error('Route handling network error:', err);
             DOM.appContent.innerHTML = `
                 <div class="error-state-card">
                     <div class="error-icon">📡</div>
-                    <div class="error-title">Ошибка сети</div>
-                    <div class="error-desc">Не удалось загрузить данные из Wikipedia API. Проверьте подключение к интернету.</div>
-                    <button class="btn-primary" onclick="window.location.reload()">Повторить попытку</button>
+                    <div class="error-title">${loc.netErrorTitle}</div>
+                    <div class="error-desc">${loc.netErrorDesc}</div>
+                    <button class="btn-primary" id="btn-route-retry">${loc.retryBtn}</button>
                 </div>
             `;
+            document.getElementById('btn-route-retry')?.addEventListener('click', () => {
+                handleRoute();
+            });
         }
     }
 
@@ -1496,7 +2268,6 @@
         DOM.searchInput.focus();
     });
 
-    // Keyboard navigation in search suggestions
     DOM.searchInput.addEventListener('keydown', (e) => {
         const items = DOM.suggestionsList.querySelectorAll('.suggestion-item');
 
@@ -1513,8 +2284,8 @@
                 updateSuggestionHighlight(items);
             }
         } else if (e.key === 'Enter') {
+            e.preventDefault();
             if (STATE.selectedSuggestionIndex >= 0 && STATE.suggestions[STATE.selectedSuggestionIndex]) {
-                e.preventDefault();
                 selectSuggestion(STATE.suggestions[STATE.selectedSuggestionIndex]);
             } else {
                 handleSearchSubmit();
@@ -1529,6 +2300,7 @@
             item.classList.toggle('selected', idx === STATE.selectedSuggestionIndex);
             if (idx === STATE.selectedSuggestionIndex) {
                 DOM.searchInput.value = STATE.suggestions[idx];
+                DOM.searchClearBtn.classList.remove('hidden');
             }
         });
     }
@@ -1581,11 +2353,49 @@
     // THEME & LANGUAGE HANDLERS
     // =========================================================================
 
+    function updateThemeIcon(theme) {
+        if (!DOM.themeToggleBtn) return;
+        if (theme === 'light') {
+            DOM.themeToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            `;
+        } else if (theme === 'oled') {
+            DOM.themeToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"></path>
+                </svg>
+            `;
+        } else {
+            DOM.themeToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            `;
+        }
+    }
+
     function applyTheme(theme) {
         document.body.classList.remove('theme-dark', 'theme-light', 'theme-oled');
         document.body.classList.add(`theme-${theme}`);
         localStorage.setItem('zeta_wiki_theme', theme);
         STATE.theme = theme;
+
+        if (DOM.metaThemeColor) {
+            DOM.metaThemeColor.setAttribute('content', theme === 'light' ? '#F8FAFC' : theme === 'oled' ? '#000000' : '#0B0D14');
+        }
+
+        updateThemeIcon(theme);
     }
 
     DOM.themeToggleBtn.addEventListener('click', () => {
@@ -1597,7 +2407,6 @@
     DOM.langSelect.value = STATE.lang;
     DOM.langSelect.addEventListener('change', (e) => {
         const newLang = e.target.value;
-        const oldLang = STATE.lang;
         STATE.lang = newLang;
         localStorage.setItem('zeta_wiki_lang', STATE.lang);
         STATE.cache.clear();
@@ -1608,7 +2417,12 @@
         const hash = window.location.hash || '';
         if (hash.startsWith('#article/') && STATE.currentLangLinks[newLang]) {
             const translatedTitle = STATE.currentLangLinks[newLang];
-            window.location.hash = `#article/${encodeURIComponent(translatedTitle)}`;
+            const targetHash = `#article/${encodeURIComponent(translatedTitle)}`;
+            if (window.location.hash === targetHash) {
+                handleRoute();
+            } else {
+                window.location.hash = targetHash;
+            }
         } else {
             handleRoute();
         }
@@ -1632,14 +2446,14 @@
     DOM.sidebarCloseBtn?.addEventListener('click', closeMobileSidebar);
     DOM.sidebarOverlay.addEventListener('click', closeMobileSidebar);
 
-    // Reading progress tracker & Back to top button listener
     DOM.appContent.addEventListener('scroll', () => {
         const scrollTop = DOM.appContent.scrollTop;
         const scrollHeight = DOM.appContent.scrollHeight - DOM.appContent.clientHeight;
         const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-        DOM.readingProgressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        if (DOM.readingProgressBar) {
+            DOM.readingProgressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        }
 
-        // Back to top button visibility
         if (DOM.btnBackToTop) {
             DOM.btnBackToTop.classList.toggle('hidden', scrollTop < 350);
         }
@@ -1670,19 +2484,19 @@
             if (isInputFocused) DOM.searchInput.blur();
         }
         // Alt + R: Random article
-        else if (e.altKey && e.key.toLowerCase() === 'r') {
+        else if (e.altKey && e.key.toLowerCase() === 'r' && !isInputFocused) {
             e.preventDefault();
             window.location.hash = '#random';
         }
         // Alt + T: Cycle theme
-        else if (e.altKey && e.key.toLowerCase() === 't') {
+        else if (e.altKey && e.key.toLowerCase() === 't' && !isInputFocused) {
             e.preventDefault();
             const nextTheme = STATE.theme === 'dark' ? 'light' : STATE.theme === 'light' ? 'oled' : 'dark';
             applyTheme(nextTheme);
             showToast(`Тема: ${nextTheme.toUpperCase()}`, '🎨');
         }
         // Alt + H: Go home
-        else if (e.altKey && e.key.toLowerCase() === 'h') {
+        else if (e.altKey && e.key.toLowerCase() === 'h' && !isInputFocused) {
             e.preventDefault();
             window.location.hash = '#home';
         }
@@ -1702,7 +2516,7 @@
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
 
-    // Register PWA Service Worker if available
+    // Register PWA Service Worker
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
         navigator.serviceWorker.register('sw.js').catch(err => {
             console.log('SW registration skipped or failed:', err);
@@ -1720,6 +2534,15 @@
     applyReaderSettings();
     setupReaderControls();
     updateBadges();
+
+    // Initialize voices
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            loadAvailableVoices();
+            renderVoiceSelectorUI();
+        };
+        loadAvailableVoices();
+    }
 
     // Initial Route Execution
     handleRoute();
